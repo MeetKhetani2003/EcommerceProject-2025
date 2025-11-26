@@ -4,7 +4,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import React, { useState, useRef, useEffect } from "react";
 import { gsap } from "gsap";
-
+import { MdKeyboardArrowDown, MdKeyboardArrowUp } from "react-icons/md";
 const logo = "/assets/Logo.png";
 
 const megaMenuData = [
@@ -64,6 +64,30 @@ const Icon = {
       <circle cx="9" cy="19" r="1.6" />
       <circle cx="17" cy="19" r="1.6" />
       <path d="M3 3h3l2.4 10.4c.2.8.9 1.3 1.7 1.3h7.6c.8 0 1.5-.5 1.7-1.3L21 7H7" />
+    </svg>
+  ),
+};
+const MobileIcons = {
+  arrowDown: (
+    <svg
+      width="18"
+      height="18"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
+      <path d="M6 8l4 4 4-4" />
+    </svg>
+  ),
+  arrowUp: (
+    <svg
+      width="18"
+      height="18"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
+      <path d="M6 12l4-4 4 4" />
     </svg>
   ),
 };
@@ -294,7 +318,13 @@ const NavBar = () => {
                   onClick={() => toggleMobileMega(link.name)}
                 >
                   {link.name}
-                  <span>{openMobileMega === link.name ? "▲" : "▼"}</span>
+                  <span>
+                    {openMobileMega === link.name ? (
+                      <MdKeyboardArrowUp />
+                    ) : (
+                      <MdKeyboardArrowDown />
+                    )}
+                  </span>
                 </button>
               ) : (
                 <Link
