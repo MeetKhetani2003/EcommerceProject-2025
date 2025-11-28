@@ -2,241 +2,316 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import React, { useState, useRef, useEffect } from "react";
-import { gsap } from "gsap";
+import React, { useState } from "react";
+import { CgClose, CgMenu } from "react-icons/cg";
 import { MdKeyboardArrowDown, MdKeyboardArrowUp } from "react-icons/md";
-const logo = "/assets/Logo.png";
+import {
+  FiSearch,
+  FiUser,
+  FiHeart,
+  FiShoppingBag,
+  FiLogIn,
+} from "react-icons/fi";
 
-const megaMenuData = [
-  {
-    title: "Shirts",
-    sub: ["Casual Shirts", "Formal Shirts", "Denim Shirts", "Partywear Shirts"],
-  },
-  {
-    title: "T-Shirts",
-    sub: ["Oversized", "Graphics", "Plain", "Henley"],
-  },
-  {
-    title: "Jeans",
-    sub: ["Slim Fit", "Straight Fit", "Baggy", "Ripped Denim"],
-  },
-];
+// --- Color Palette ---
+const PALETTE = {
+  BG_LIGHT: "bg-[#FAF0E6]", // Light Beige
+  BORDER_ACCENT: "border-[#DEB887]", // Tan/Brown Border
+  TEXT_PRIMARY: "text-[#654321]", // Dark Brown Text/Accent
+  HOVER_ACCENT: "hover:text-[#654321]",
+  ACCENT_BG: "bg-[#654321]", // Dark Brown BG
+  ACCENT_HOVER_BG: "hover:bg-[#DEB887]",
+  OVERLAY: "bg-[#4E342E]", // Darker Brown for overlay
+  LOGO_TEXT: "font-serif text-[#654321] tracking-wide",
+};
 
+// --- Data Structure Mimicking TSS Sidebar Content ---
 const navLinks = [
-  { name: "Home", href: "/" },
-  { name: "Products", href: "/products", mega: true },
-  { name: "About", href: "/about" },
-  { name: "Contact", href: "/contact" },
+  { name: "Men", href: "/men", mega: true },
+  { name: "Women", href: "/women", mega: true },
+  { name: "Sneakers", href: "/sneakers" },
+  { name: "New Arrivals", href: "/new-arrivals" },
+  { name: "Best Sellers", href: "/best-sellers" },
+  { name: "Official Merch", href: "/official-merch", accordion: true },
+  { name: "More", href: "/more", accordion: true },
 ];
+
+const sidebarUtilityLinks = [
+  { name: "MY MEMBERSHIP", href: "/membership" },
+  { name: "Stores Near Me", href: "/stores" },
+  { name: "Track My Order", href: "/track-order" },
+];
+
+const imageCategories = [
+  { title: "BF Sale", img: "/assets/bf-sale.jpg", link: "/sale" },
+  { title: "All Topwear", img: "/assets/all-topwear.jpg", link: "/topwear" },
+  { title: "All Bottoms", img: "/assets/all-bottoms.jpg", link: "/bottoms" },
+  { title: "Member Vault", img: "/assets/member-vault.jpg", link: "/vault" },
+  {
+    title: "Stocking Out",
+    img: "/assets/stocking-out.jpg",
+    link: "/stocking-out",
+  },
+];
+
+const sidebarMegaData = {
+  Men: [
+    {
+      title: "T-Shirts",
+      subs: ["All T-Shirts", "Oversized T-Shirts", "Sajana", "Shirts"],
+    },
+    {
+      title: "Bottomwear",
+      subs: ["Pants", "Jeans", "Joggers", "Shorts & Boxers"],
+    },
+    {
+      title: "Accessories",
+      subs: ["Backpacks", "Perfumes", "Socks", "Caps", "Shoe Laces"],
+    },
+  ],
+  Women: [
+    /* Add Women's data here */
+  ],
+};
 
 const Icon = {
-  profile: (
-    <svg
-      width="22"
-      height="22"
-      fill="none"
-      strokeWidth="1.6"
-      stroke="currentColor"
-    >
-      <circle cx="11" cy="7" r="4" />
-      <path d="M4 20c0-4 3-6 7-6s7 2 7 6" />
-    </svg>
-  ),
-  wishlist: (
-    <svg
-      width="22"
-      height="22"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.6"
-    >
-      <path d="M12 20s-6.5-4.4-9-8.8C-1.1 5.2 2.3 1 6.7 2.3A5.4 5.4 0 0112 6.1a5.4 5.4 0 015.3-3.8c4.4-1.3 7.8 2.9 3.7 8.9C18.5 15.6 12 20 12 20z" />
-    </svg>
-  ),
-  cart: (
-    <svg
-      width="22"
-      height="22"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.6"
-    >
-      <circle cx="9" cy="19" r="1.6" />
-      <circle cx="17" cy="19" r="1.6" />
-      <path d="M3 3h3l2.4 10.4c.2.8.9 1.3 1.7 1.3h7.6c.8 0 1.5-.5 1.7-1.3L21 7H7" />
-    </svg>
-  ),
+  cart: <FiShoppingBag className="w-6 h-6" />,
 };
-const MobileIcons = {
-  arrowDown: (
-    <svg
-      width="18"
-      height="18"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-    >
-      <path d="M6 8l4 4 4-4" />
-    </svg>
-  ),
-  arrowUp: (
-    <svg
-      width="18"
-      height="18"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-    >
-      <path d="M6 12l4-4 4 4" />
-    </svg>
-  ),
-};
+
+// Placeholder image path
+const placeholderImage = "/assets/placeholder.jpg";
 
 const NavBar = () => {
   const pathname = usePathname();
+  // Check if current path matches link href
   const isActive = (href) => pathname === href;
-  const [isProductsMegaOpen, setIsProductsMegaOpen] = useState(false);
 
-  const [desktopMegaOpen, setDesktopMegaOpen] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [openMobileMega, setOpenMobileMega] = useState(null);
+  // State for the main sidebar (hamburger menu) open/close
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  // State for which sidebar accordion section is open
+  const [openAccordion, setOpenAccordion] = useState(null);
 
-  const desktopMegaRef = useRef(null);
-  const mobileMegaRef = useRef(null);
-
-  /* Desktop GSAP Mega Animation */
-  useEffect(() => {
-    if (!desktopMegaRef.current) return;
-    gsap.set(desktopMegaRef.current, {
-      height: 0,
-      opacity: 0,
-      display: "none",
-    });
-  }, []);
-
-  const openDesktopMega = () => {
-    setDesktopMegaOpen(true);
-    gsap.killTweensOf(desktopMegaRef.current);
-    gsap.set(desktopMegaRef.current, { display: "block" });
-    gsap.to(desktopMegaRef.current, {
-      height: "auto",
-      opacity: 1,
-      duration: 0.35,
-      ease: "power3.out",
-    });
+  // Toggle the main sidebar and control body scrolling
+  const toggleSidebar = () => {
+    const newState = !isSidebarOpen;
+    setIsSidebarOpen(newState);
+    document.body.style.overflow = newState ? "hidden" : "auto";
   };
 
-  const closeDesktopMega = () => {
-    gsap.to(desktopMegaRef.current, {
-      height: 0,
-      opacity: 0,
-      duration: 0.25,
-      ease: "power2.in",
-      onComplete: () => setDesktopMegaOpen(false),
-    });
+  // Toggle the accordion section (e.g., Men/Women/More)
+  const toggleAccordion = (menuName) => {
+    setOpenAccordion(openAccordion === menuName ? null : menuName);
   };
 
-  /* Mobile GSAP Mega Animation */
-  useEffect(() => {
-    if (!mobileMegaRef.current) return;
-    gsap.set(mobileMegaRef.current, { height: 0, opacity: 0 });
-  }, []);
+  // Close everything when a link is clicked
+  const handleLinkClick = () => {
+    setIsSidebarOpen(false);
+    setOpenAccordion(null);
+    document.body.style.overflow = "auto";
+  };
 
-  const toggleMobileMega = (menuName) => {
-    if (openMobileMega === menuName) {
-      setOpenMobileMega(null); // close if already open
-    } else {
-      setOpenMobileMega(menuName); // open the specific one
+  // --- Component for rendering Sidebar Links/Accordions ---
+  const SidebarContent = ({ link }) => {
+    const isMega = link.mega;
+    const isAccordion = link.accordion;
+    const isCurrentlyOpen = openAccordion === link.name;
+    const data = sidebarMegaData[link.name];
+
+    if (isMega || isAccordion) {
+      return (
+        <div key={link.name} className={`border-b ${PALETTE.BORDER_ACCENT}`}>
+          <button
+            className={`w-full text-left py-4 px-4 font-bold flex justify-between items-center text-lg ${PALETTE.TEXT_PRIMARY} ${PALETTE.HOVER_ACCENT}`}
+            onClick={() => toggleAccordion(link.name)}
+          >
+            {link.name}
+            <span className="text-xl text-gray-700">
+              {isCurrentlyOpen ? (
+                <MdKeyboardArrowUp />
+              ) : (
+                <MdKeyboardArrowDown />
+              )}
+            </span>
+          </button>
+
+          <div
+            // Tailwind trick to simulate height transition on unknown height content
+            className={`transition-all duration-300 ease-in-out overflow-hidden ${
+              isCurrentlyOpen
+                ? "max-h-[1000px] opacity-100"
+                : "max-h-0 opacity-0"
+            }`}
+          >
+            {/* The core 'Men'/'Women' sidebar content from the screenshot */}
+            {isMega && data && (
+              <div className="p-4 space-y-4">
+                {/* Top Row: Sale/Topwear/Bottoms (Image Grid) */}
+                <h3
+                  className={`text-xs font-semibold uppercase ${PALETTE.TEXT_PRIMARY} mb-2`}
+                >
+                  FEATURED COLLECTIONS
+                </h3>
+                <div className="grid grid-cols-4 gap-2">
+                  {imageCategories.slice(0, 4).map((item, i) => (
+                    <Link
+                      href={item.link}
+                      key={i}
+                      className={`flex flex-col items-center text-center text-xs font-medium ${PALETTE.HOVER_ACCENT}`}
+                      onClick={handleLinkClick}
+                    >
+                      <div className="w-full aspect-square overflow-hidden rounded-full border border-gray-100 mb-1">
+                        <Image
+                          src={placeholderImage}
+                          alt={item.title}
+                          width={60}
+                          height={60}
+                          className="object-cover"
+                        />
+                      </div>
+                      {item.title.split(" ")[0]}
+                    </Link>
+                  ))}
+                </div>
+
+                {/* Categories Section */}
+                <h3
+                  className={`text-xs font-semibold uppercase ${PALETTE.TEXT_PRIMARY} pt-4 mb-2`}
+                >
+                  Categories
+                </h3>
+                <div className="grid grid-cols-4 gap-2">
+                  {data
+                    .flatMap((d) => d.subs)
+                    .slice(0, 8)
+                    .map((subName, i) => (
+                      <Link
+                        href={`/products/${link.name.toLowerCase()}/${subName
+                          .toLowerCase()
+                          .replace(/ /g, "-")}`}
+                        key={i}
+                        className={`flex flex-col items-center text-center text-xs font-medium ${PALETTE.HOVER_ACCENT}`}
+                        onClick={handleLinkClick}
+                      >
+                        <div className="w-full aspect-square overflow-hidden rounded-lg border border-gray-100 mb-1">
+                          <Image
+                            src={placeholderImage}
+                            alt={subName}
+                            width={60}
+                            height={60}
+                            className="object-cover"
+                          />
+                        </div>
+                        {subName.split(" ")[0]}
+                      </Link>
+                    ))}
+                </div>
+
+                {/* Simplified for other non-image categories */}
+                {data.map((cat, i) => (
+                  <div key={i} className="pt-2">
+                    <h4
+                      className={`text-sm font-bold ${PALETTE.TEXT_PRIMARY} mb-2`}
+                    >
+                      {cat.title}
+                    </h4>
+                    <ul className="space-y-1 text-sm text-gray-700 pl-2">
+                      {cat.subs.map((s, si) => (
+                        <li key={si}>
+                          <Link
+                            href={`/products/${link.name.toLowerCase()}/${s
+                              .toLowerCase()
+                              .replace(/ /g, "-")}`}
+                            className={`block py-1 ${PALETTE.HOVER_ACCENT}`}
+                            onClick={handleLinkClick}
+                          >
+                            {s}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Placeholder for 'Official Merch' and 'More' content */}
+            {isAccordion && !isMega && (
+              <div className="p-4 text-sm text-gray-700 space-y-2">
+                <p>Additional content for {link.name} goes here.</p>
+                <Link
+                  href="#"
+                  className={`block ${PALETTE.HOVER_ACCENT}`}
+                  onClick={handleLinkClick}
+                >
+                  Example Sub-Link
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+      );
     }
+
+    // Regular link
+    return (
+      <Link
+        key={link.name}
+        href={link.href}
+        className={`block py-4 px-4 font-bold text-lg ${PALETTE.TEXT_PRIMARY} ${PALETTE.HOVER_ACCENT} border-b ${PALETTE.BORDER_ACCENT}`}
+        onClick={handleLinkClick}
+      >
+        {link.name}
+      </Link>
+    );
   };
 
   return (
-    <div className="relative z-50">
-      <nav className="bg-[#FAF0E6] border-b border-[#DEB887] shadow-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          {/* LOGO */}
-
-          <Link
-            href="/"
-            className="flex items-center space-x-3 hover:scale-105 transition-transform duration-200"
+    // FIX APPLIED HERE: Added sticky top-0 and w-full
+    <header
+      className={`sticky top-0 w-full z-50 ${PALETTE.BG_LIGHT} shadow-md`}
+    >
+      {/* Top Bar (Hamburger/Logo/Search/Icons) */}
+      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+        {/* LEFT SIDE: HAMBURGER & MAIN CATEGORIES */}
+        <div className="flex items-center space-x-6">
+          {/* 1. HAMBURGER BUTTON (Visible on all screens) */}
+          <button
+            className={`${PALETTE.TEXT_PRIMARY} ${PALETTE.HOVER_ACCENT}`}
+            onClick={toggleSidebar}
+            aria-label="Toggle navigation menu"
           >
-            <div className="w-20  md:w-14 md:h-14  overflow-hidden flex items-center justify-center ">
-              <Image
-                src={"/assets/logo.png"}
-                alt="Branded Collection Logo"
-                width={56}
-                height={56}
-                className="object-contain"
-              />
-            </div>
-            <div className="flex flex-col">
-              <span className="font-bold text-[#654321] text-lg md:text-xl font-serif tracking-wide">
-                Branded Collection
-              </span>
-            </div>
-          </Link>
+            {isSidebarOpen ? (
+              <CgClose className="w-6 h-6" />
+            ) : (
+              <CgMenu className="w-6 h-6" />
+            )}
+          </button>
 
-          <ul className="hidden md:flex space-x-10 text-[15px] font-semibold uppercase text-[#654321']">
-            {navLinks.map((link, idx) =>
-              link.mega ? (
-                <li
-                  key={idx}
-                  className="relative"
-                  onMouseEnter={() => setIsProductsMegaOpen(true)}
-                  onMouseLeave={() => setIsProductsMegaOpen(false)}
-                >
-                  <Link
-                    href="/products"
-                    className={`px-2 py-1 transition ${
-                      isActive("/products")
-                        ? "text-[#654321]"
-                        : "text-gray-700 hover:text-[#654321]"
-                    }`}
-                  >
-                    Products
-                  </Link>
-
-                  {isProductsMegaOpen && (
-                    <div className="absolute left-1/2 top-full transform -translate-x-1/2 w-[600px] bg-[#FFFDF8] border-t border-[#DEB887] shadow-xl overflow-hidden z-40 rounded-b-md">
-                      <div className="px-6 py-8 grid grid-cols-3 gap-6">
-                        {megaMenuData.map((cat, i) => (
-                          <div key={i}>
-                            <h3 className="text-lg font-bold text-[#654321] mb-4 uppercase">
-                              {cat.title}
-                            </h3>
-                            <ul className="space-y-2 text-gray-700">
-                              {cat.sub.map((s, si) => (
-                                <li key={si}>
-                                  <Link
-                                    href={`/products/${cat.title.toLowerCase()}/${s
-                                      .toLowerCase()
-                                      .replace(/ /g, "-")}`}
-                                    className="hover:text-[#654321] transition"
-                                  >
-                                    {s}
-                                  </Link>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </li>
-              ) : (
+          {/* 2. MAIN CATEGORY LINKS (Desktop only) */}
+          <ul
+            className={`hidden lg:flex space-x-6 text-sm font-semibold uppercase ${PALETTE.TEXT_PRIMARY} h-full`}
+          >
+            {navLinks
+              .filter((link) => !link.mega && !link.accordion)
+              .slice(0, 3)
+              .map((link) => (
                 <li key={link.name} className="relative group">
                   <Link
                     href={link.href}
-                    className={`relative px-2 py-1 font-semibold transition-colors ${
+                    className={`relative py-1 transition-colors ${
+                      PALETTE.HOVER_ACCENT
+                    } ${
                       isActive(link.href)
-                        ? "text-[#654321]"
-                        : "text-gray-700 group-hover:text-[#654321]"
+                        ? PALETTE.TEXT_PRIMARY
+                        : "text-gray-700"
                     }`}
                   >
                     {link.name}
+                    {/* Underline Indicator */}
                     <span
-                      className={`absolute left-0 -bottom-1 h-0.5 bg-[#654321] transition-all duration-300 ${
+                      className={`absolute left-0 -bottom-1 h-0.5 ${
+                        PALETTE.ACCENT_BG
+                      } transition-all duration-300 ${
                         isActive(link.href)
                           ? "w-full"
                           : "w-0 group-hover:w-full"
@@ -244,128 +319,132 @@ const NavBar = () => {
                     ></span>
                   </Link>
                 </li>
-              )
-            )}
+              ))}
           </ul>
+        </div>
 
-          {/* ICONS */}
-          <div className="hidden md:flex space-x-7 text-[#654321]">
-            <Link href="/profile">{Icon.profile}</Link>
-            <Link href="/wishlist">{Icon.wishlist}</Link>
-            <Link href="/cart" className="relative">
-              {Icon.cart}
-              <span className="absolute -top-1.5 -right-2 bg-red-600 text-white text-[10px] px-1.5 py-[1px] rounded-full">
-                3
-              </span>
-            </Link>
+        {/* CENTER: LOGO */}
+        <Link href="/" className="absolute left-1/2 transform -translate-x-1/2">
+          {/* NOTE: If you only want the logo image, this is fine. 
+             If you want the text/image combo like before, adjust this block: */}
+          <Image
+            src={"/assets/logo.png"}
+            alt="Brand Logo"
+            width={60}
+            height={60}
+          />
+        </Link>
+
+        {/* RIGHT SIDE: SEARCH & ICONS */}
+        <div className="flex items-center space-x-4">
+          {/* Search Input (Desktop/Large Screen) */}
+          <div className="hidden sm:block">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="What are you looking for?"
+                className={`w-48 lg:w-64 xl:w-80 h-10 border ${PALETTE.BORDER_ACCENT} rounded-full pl-4 pr-10 text-sm focus:ring-[#DEB887] focus:border-[#DEB887] ${PALETTE.BG_LIGHT}`}
+              />
+              <button
+                className={`absolute right-0 top-0 mt-2 mr-3 text-gray-600 ${PALETTE.HOVER_ACCENT}`}
+                aria-label="Search"
+              >
+                <FiSearch className="w-5 h-5" />
+              </button>
+            </div>
           </div>
 
-          {/* MOBILE BUTTON */}
-          <button
-            className="md:hidden text-[#654321]"
-            onClick={() => setMobileOpen(!mobileOpen)}
+          {/* Icons */}
+          <Link
+            href="/profile"
+            className={`hidden sm:block ${PALETTE.TEXT_PRIMARY} ${PALETTE.HOVER_ACCENT} transition-colors`}
           >
-            {mobileOpen ? (
-              <svg width="26" height="26" stroke="currentColor" fill="none">
-                <path d="M6 6l14 14M6 20L20 6" strokeWidth="2" />
-              </svg>
-            ) : (
-              <svg width="26" height="26" stroke="currentColor" fill="none">
-                <path d="M4 7h18M4 13h18M4 19h18" strokeWidth="2" />
-              </svg>
-            )}
+            <FiUser className="w-6 h-6" />
+          </Link>
+          <Link
+            href="/wishlist"
+            className={`hidden sm:block ${PALETTE.TEXT_PRIMARY} ${PALETTE.HOVER_ACCENT} transition-colors`}
+          >
+            <FiHeart className="w-6 h-6" />
+          </Link>
+          <Link
+            href="/cart"
+            className={`relative ${PALETTE.TEXT_PRIMARY} ${PALETTE.HOVER_ACCENT} transition-colors`}
+          >
+            {Icon.cart}
+            {/* Cart Badge with Accent Color */}
+            <span
+              className={`absolute -top-1.5 -right-2 ${PALETTE.ACCENT_BG} text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold`}
+            >
+              3
+            </span>
+          </Link>
+          {/* Search icon for Mobile */}
+          <button
+            className={`sm:hidden ${PALETTE.TEXT_PRIMARY} ${PALETTE.HOVER_ACCENT}`}
+            aria-label="Search"
+          >
+            <FiSearch className="w-6 h-6" />
           </button>
         </div>
       </nav>
 
-      {/* DESKTOP MEGA MENU */}
+      {/* --- SLIDING SIDEBAR DRAWER --- */}
+
+      {/* 1. Overlay (Darkens the content and closes the sidebar on click) */}
       <div
-        ref={desktopMegaRef}
-        className="absolute left-0 w-full bg-[#FFFDF8] border-t border-[#DEB887] shadow-xl overflow-hidden z-40"
+        className={`fixed inset-0 ${PALETTE.OVERLAY} transition-opacity z-40 ${
+          isSidebarOpen ? "opacity-40" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={toggleSidebar}
+      ></div>
+
+      {/* 2. Sidebar Content Panel */}
+      <div
+        className={`fixed top-0 left-0 w-80 sm:w-96 h-full ${
+          PALETTE.BG_LIGHT
+        } shadow-2xl overflow-y-auto transform transition-transform duration-300 ease-in-out z-50 ${
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
       >
-        <div className="max-w-7xl mx-auto px-8 py-10 grid grid-cols-3 gap-10">
-          {megaMenuData.map((cat, i) => (
-            <div key={i}>
-              <h3 className="text-lg font-bold text-[#654321] mb-4 uppercase">
-                {cat.title}
-              </h3>
-              <ul className="space-y-2 text-gray-700">
-                {cat.sub.map((s, si) => (
-                  <li key={si}>
-                    <Link
-                      href={`/products/${cat.title.toLowerCase()}/${s
-                        .toLowerCase()
-                        .replace(/ /g, "-")}`}
-                      className="hover:text-[#654321] transition"
-                    >
-                      {s}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
+        {/* Top Header Section (Log in/Register & App Offer) */}
+        <div className={`${PALETTE.ACCENT_BG} text-white p-4`}>
+          <Link
+            href="/login"
+            className={`flex items-center justify-between bg-white ${PALETTE.TEXT_PRIMARY} py-2 px-3 rounded-md mb-2 font-bold hover:bg-gray-100 transition`}
+            onClick={handleLinkClick}
+          >
+            <span>Log in/Register</span>
+            <FiLogIn className="w-5 h-5" />
+          </Link>
+          <p className="text-sm font-medium text-center">
+            Earn 10% Cashback on Every App Order
+            <span className="ml-1 text-yellow-300">💰</span>
+          </p>
+        </div>
+
+        {/* Main Navigation Links */}
+        <div className="py-2">
+          {navLinks.map((link) => (
+            <SidebarContent key={link.name} link={link} />
+          ))}
+        </div>
+
+        {/* Utility Links Section (My Membership, Stores, Track Order) */}
+        <div className={`pt-4 border-t ${PALETTE.BORDER_ACCENT}`}>
+          {sidebarUtilityLinks.map((link) => (
+            <Link
+              key={link.name}
+              href={link.href}
+              className={`block py-3 px-4 text-sm font-semibold ${PALETTE.TEXT_PRIMARY} ${PALETTE.ACCENT_HOVER_BG} transition`}
+              onClick={handleLinkClick}
+            >
+              {link.name}
+            </Link>
           ))}
         </div>
       </div>
-
-      {/* MOBILE MENU */}
-      {mobileOpen && (
-        <div className="md:hidden bg-[#FAF0E6] border-t border-[#DEB887] shadow-xl px-6 py-4 text-[#654321]">
-          {navLinks.map((link) => (
-            <div key={link.name} className="mb-1">
-              {link.mega ? (
-                <button
-                  className="w-full text-left py-2 font-semibold flex justify-between items-center"
-                  onClick={() => toggleMobileMega(link.name)}
-                >
-                  {link.name}
-                  <span>
-                    {openMobileMega === link.name ? (
-                      <MdKeyboardArrowUp />
-                    ) : (
-                      <MdKeyboardArrowDown />
-                    )}
-                  </span>
-                </button>
-              ) : (
-                <Link
-                  href={link.href}
-                  className="block py-2 font-semibold"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  {link.name}
-                </Link>
-              )}
-
-              {/* Mobile Mega Menu */}
-              <div ref={mobileMegaRef} className="overflow-hidden">
-                {openMobileMega === link.name &&
-                  megaMenuData.map((cat, i) => (
-                    <div key={i} className="pl-4 pb-3">
-                      <h3 className="font-bold text-[#654321]">{cat.title}</h3>
-                      <ul className="pl-2 space-y-1">
-                        {cat.sub.map((s, si) => (
-                          <li key={si}>
-                            <Link
-                              href={`/products/${cat.title.toLowerCase()}/${s
-                                .toLowerCase()
-                                .replace(/ /g, "-")}`}
-                              className="block py-1 hover:text-[#654321]"
-                              onClick={() => setMobileOpen(false)}
-                            >
-                              {s}
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
+    </header>
   );
 };
 
