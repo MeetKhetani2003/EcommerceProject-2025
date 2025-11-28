@@ -14,8 +14,8 @@ const Home = () => {
   return (
     <div>
       <Hero slides={slides} />
-      <CategoriesSection />
       <FeaturedProducts />
+      <CategoriesSection />
     </div>
   );
 };
