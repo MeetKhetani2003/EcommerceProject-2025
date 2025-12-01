@@ -12,6 +12,9 @@ import {
   FiShoppingBag,
   FiLogIn,
 } from "react-icons/fi";
+import { useAppStore } from "@/store/useAppStore";
+import WishlistModal from "./WishlistModal";
+import CartModal from "./CartModal";
 
 // --- Color Palette ---
 const PALETTE = {
@@ -79,6 +82,10 @@ const NavBar = () => {
   // Check if current path matches link href
   const isActive = (href) => pathname === href;
 
+  const [cartOpen, setCartOpen] = useState(false);
+  const [wishlistOpen, setWishlistOpen] = useState(false);
+  const wishlistCount = useAppStore((s) => s.wishlist.length);
+  const cartCount = useAppStore((s) => s.cartCount());
   // State for the main sidebar (hamburger menu) open/close
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -339,24 +346,27 @@ const NavBar = () => {
           >
             <FiUser className="w-6 h-6" />
           </Link>
-          <Link
-            href="/wishlist"
+          <button
+            onClick={() => setWishlistOpen(true)}
             className={`hidden sm:block ${PALETTE.TEXT_PRIMARY} ${PALETTE.HOVER_ACCENT} transition-colors`}
           >
             <FiHeart className="w-6 h-6" />
-          </Link>
-          <Link
-            href="/cart"
+            {wishlistCount > 0 && (
+              <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold">
+                {wishlistCount}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => setCartOpen(true)}
             className={`relative ${PALETTE.TEXT_PRIMARY} ${PALETTE.HOVER_ACCENT} transition-colors`}
           >
             {Icon.cart}
             {/* Cart Badge with Accent Color */}
-            <span
-              className={`absolute -top-1.5 -right-2 ${PALETTE.ACCENT_BG} text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold`}
-            >
-              3
+            <span className="absolute -top-1.5 -right-2 bg-[#654321] text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold">
+              {cartCount}
             </span>
-          </Link>
+          </button>
           {/* Search icon for Mobile */}
           <button
             className={`sm:hidden ${PALETTE.TEXT_PRIMARY} ${PALETTE.HOVER_ACCENT}`}
@@ -408,6 +418,11 @@ const NavBar = () => {
           ))}
         </div>
       </div>
+      <WishlistModal
+        open={wishlistOpen}
+        onClose={() => setWishlistOpen(false)}
+      />
+      <CartModal open={cartOpen} onClose={() => setCartOpen(false)} />
     </header>
   );
 };

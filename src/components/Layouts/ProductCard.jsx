@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { HeartIcon } from "@heroicons/react/24/outline";
+import { useAppStore } from "../../store/useAppStore";
 
 const ProductCard = ({ product }) => {
   const [isHovered, setIsHovered] = useState(false);
@@ -17,7 +18,10 @@ const ProductCard = ({ product }) => {
   };
 
   const currentProduct = product || defaultProduct;
-
+  const isWishlisted = useAppStore((s) => s.isInWishlist(currentProduct._id));
+  const toggleWishlist = useAppStore((s) =>
+    isWishlisted ? s.removeFromWishlist : s.addToWishlist
+  );
   // --- FIX: Works in Dev + Production + GridFS ---
   const resolveImage = (img) => {
     if (!img) return "/placeholder.png";
@@ -74,8 +78,12 @@ const ProductCard = ({ product }) => {
         {frontLoaded && (
           <>
             {/* Wishlist Button */}
-            <button className="absolute top-4 right-4 z-10 p-2 bg-white rounded-full shadow-md hover:scale-105 transition-all">
-              <HeartIcon className="h-5 w-5 text-gray-700" />
+            <button
+              onClick={() => toggleWishlist(currentProduct)}
+              className={`absolute top-4 right-4 z-10 p-2 rounded-full shadow-md transition-all 
+             ${isWishlisted ? "bg-red-500 text-white" : "bg-white"}`}
+            >
+              <HeartIcon className="h-5 w-5" />
             </button>
 
             {/* Badges */}
@@ -117,6 +125,12 @@ const ProductCard = ({ product }) => {
               {currentProduct.price.discountText}
             </span>
           )}
+          <button
+            onClick={() => useAppStore.getState().addToCart(currentProduct)}
+            className="mt-3 w-full bg-[#654321] text-white py-2 rounded-lg hover:bg-[#7b4a2d] transition"
+          >
+            Add to Cart
+          </button>
         </div>
       </div>
     </div>
