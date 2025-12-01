@@ -108,16 +108,18 @@ const ProductCard = ({ product }) => {
         {/* Price and Discount */}
         <div className="flex items-baseline space-x-2">
           <span className="text-xl font-bold text-gray-900">
-            ₹{currentProduct.price}
+            ₹{currentProduct.price?.current}
           </span>
-          {currentProduct.oldPrice && (
+
+          {currentProduct.price?.old && (
             <span className="text-sm text-gray-400 line-through">
-              ₹{currentProduct.oldPrice}
+              ₹{currentProduct.price.old}
             </span>
           )}
-          {currentProduct.discount && (
+
+          {currentProduct.price?.discountText && (
             <span className="text-sm text-red-500 font-medium">
-              {currentProduct.discount}
+              {currentProduct.price.discountText}
             </span>
           )}
         </div>

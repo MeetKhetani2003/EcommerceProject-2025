@@ -2,6 +2,7 @@
 import CategoriesSection from "@/components/Home/CategoriesSection";
 import FeaturedProducts from "@/components/Home/FeaturedProducts";
 import Hero from "@/components/Home/Hero";
+import Products from "@/components/Home/Products";
 import ProductCard from "@/components/Layouts/ProductCard";
 
 const Home = () => {
@@ -16,6 +17,7 @@ const Home = () => {
       <Hero slides={slides} />
       <FeaturedProducts />
       <CategoriesSection />
+      <Products />
     </div>
   );
 };

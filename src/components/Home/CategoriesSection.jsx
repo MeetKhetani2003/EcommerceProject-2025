@@ -14,6 +14,7 @@ import { Pagination, Autoplay } from "swiper/modules";
 // Import Swiper styles (you might need to adjust the path based on your setup)
 import "swiper/css";
 import "swiper/css/pagination";
+import CategoryCard from "./CategoryCard";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -30,47 +31,47 @@ const chunkArray = (array, size) => {
 const MOBILE_CHUNK_SIZE = 4;
 const chunkedCategories = chunkArray(categories, MOBILE_CHUNK_SIZE);
 
-const CategoryCard = ({ cat }) => (
-  <Link href={cat.href} className="category-card group cursor-pointer">
-    {/* CARD */}
-    <div
-      className="
-        overflow-hidden 
-        bg-gradient-to-b from-neutral-100 to-neutral-50 
-        border border-neutral-200 
-        shadow-[0_3px_10px_rgba(0,0,0,0.07)]
-        transition-all 
-        duration-500 
-        group-hover:scale-[1.03] 
-        group-hover:shadow-[0_10px_25px_rgba(0,0,0,0.12)]
-      "
-    >
-      <div className="relative w-full h-40 sm:h-60">
-        {" "}
-        {/* Adjusted height for better mobile fit */}
-        <Image
-          src={cat.image}
-          alt={cat.title}
-          fill
-          className="
-            object-cover 
-            transition-all 
-            duration-500 
-            group-hover:scale-110 
-          "
-        />
-      </div>
-    </div>
+// const CategoryCard = ({ cat }) => (
+//   <Link href={cat.href} className="category-card group cursor-pointer">
+//     {/* CARD */}
+//     <div
+//       className="
+//         overflow-hidden
+//         bg-gradient-to-b from-neutral-100 to-neutral-50
+//         border border-neutral-200
+//         shadow-[0_3px_10px_rgba(0,0,0,0.07)]
+//         transition-all
+//         duration-500
+//         group-hover:scale-[1.03]
+//         group-hover:shadow-[0_10px_25px_rgba(0,0,0,0.12)]
+//       "
+//     >
+//       <div className="relative w-full h-40 sm:h-60">
+//         {" "}
+//         {/* Adjusted height for better mobile fit */}
+//         <Image
+//           src={cat.image}
+//           alt={cat.title}
+//           fill
+//           className="
+//             object-cover
+//             transition-all
+//             duration-500
+//             group-hover:scale-110
+//           "
+//         />
+//       </div>
+//     </div>
 
-    {/* TITLE */}
-    <p className="text-sm tracking-wider text-center mt-4 text-neutral-700 font-medium transition-all duration-500 group-hover:text-black group-hover:tracking-wide">
-      {cat.title}
-    </p>
+//     {/* TITLE */}
+//     <p className="text-sm tracking-wider text-center mt-4 text-neutral-700 font-medium transition-all duration-500 group-hover:text-black group-hover:tracking-wide">
+//       {cat.title}
+//     </p>
 
-    {/* Underline animation */}
-    <div className="mx-auto mt-1 h-[2px] w-0 bg-neutral-800 transition-all duration-500 group-hover:w-12"></div>
-  </Link>
-);
+//     {/* Underline animation */}
+//     <div className="mx-auto mt-1 h-[2px] w-0 bg-neutral-800 transition-all duration-500 group-hover:w-12"></div>
+//   </Link>
+// );
 
 const CategoriesSection = () => {
   const sectionRef = useRef(null);
