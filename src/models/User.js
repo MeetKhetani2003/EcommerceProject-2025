@@ -1,6 +1,20 @@
-import mongoose from "mongoose";
+import mongoose, { Schema } from "mongoose";
 import bcrypt from "bcryptjs";
-
+const CartItemSchema = new Schema(
+  {
+    product: {
+      type: Schema.Types.ObjectId,
+      ref: "Product",
+      required: true,
+    },
+    qty: {
+      type: Number,
+      default: 1,
+      min: 1,
+    },
+  },
+  { _id: false }
+);
 const addressSchema = new mongoose.Schema({
   street: {
     type: String,
@@ -84,11 +98,7 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
-    cart: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Cart",
-      required: false,
-    },
+    cart: [CartItemSchema],
     wishlist: [
       {
         type: mongoose.Schema.Types.ObjectId,

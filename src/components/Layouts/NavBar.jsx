@@ -15,6 +15,7 @@ import {
 import { useAppStore } from "@/store/useAppStore";
 import WishlistModal from "./WishlistModal";
 import CartModal from "./CartModal";
+import { Heart, ShoppingCart } from "lucide-react";
 
 // --- Color Palette ---
 const PALETTE = {
@@ -84,14 +85,18 @@ const NavBar = () => {
 
   const [cartOpen, setCartOpen] = useState(false);
   const [wishlistOpen, setWishlistOpen] = useState(false);
-  const wishlistCount = useAppStore((s) => s.wishlist.length);
-  const cartCount = useAppStore((s) => s.cartCount());
+
   // State for the main sidebar (hamburger menu) open/close
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // *** CHANGE: Set 'Men' as the initial open mega menu ***
   const [openMegaMenu, setOpenMegaMenu] = useState("Men");
-
+  // const { wishlist, cartCount } = useAppStore((s) => ({
+  //   wishlist: s.wishlist,
+  //   cartCount: s.cartCount(),
+  // }));
+  const wishlistCount = useAppStore((s) => s.wishlist.length);
+  const cartCount = useAppStore((s) => s.cartCount());
   // Toggle the main sidebar and control body scrolling
   const toggleSidebar = () => {
     const newState = !isSidebarOpen;
@@ -346,26 +351,22 @@ const NavBar = () => {
           >
             <FiUser className="w-6 h-6" />
           </Link>
-          <button
-            onClick={() => setWishlistOpen(true)}
-            className={`hidden sm:block ${PALETTE.TEXT_PRIMARY} ${PALETTE.HOVER_ACCENT} transition-colors`}
-          >
-            <FiHeart className="w-6 h-6" />
+          <button onClick={() => setWishlistOpen(true)} className="relative">
+            <Heart className="w-6 h-6 text-[#654321]" />
             {wishlistCount > 0 && (
-              <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold">
+              <span className="absolute -top-1 -right-2 text-xs bg-[#654321] text-white rounded-full px-1">
                 {wishlistCount}
               </span>
             )}
           </button>
-          <button
-            onClick={() => setCartOpen(true)}
-            className={`relative ${PALETTE.TEXT_PRIMARY} ${PALETTE.HOVER_ACCENT} transition-colors`}
-          >
-            {Icon.cart}
-            {/* Cart Badge with Accent Color */}
-            <span className="absolute -top-1.5 -right-2 bg-[#654321] text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold">
-              {cartCount}
-            </span>
+
+          <button onClick={() => setCartOpen(true)} className="relative">
+            <ShoppingCart className="w-6 h-6 text-[#654321]" />
+            {cartCount > 0 && (
+              <span className="absolute -top-1 -right-2 text-xs bg-[#654321] text-white rounded-full px-1">
+                {cartCount}
+              </span>
+            )}
           </button>
           {/* Search icon for Mobile */}
           <button
@@ -418,11 +419,8 @@ const NavBar = () => {
           ))}
         </div>
       </div>
-      <WishlistModal
-        open={wishlistOpen}
-        onClose={() => setWishlistOpen(false)}
-      />
-      <CartModal open={cartOpen} onClose={() => setCartOpen(false)} />
+      {wishlistOpen && <WishlistModal close={() => setWishlistOpen(false)} />}
+      {cartOpen && <CartModal close={() => setCartOpen(false)} />}
     </header>
   );
 };

@@ -24,7 +24,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>
-        <Toaster />
+        {/* <Toaster /> */}
         <NavBar />
         <GoogleOAuthProvider
           clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}
@@ -32,6 +32,17 @@ export default function RootLayout({ children }) {
           {children}
         </GoogleOAuthProvider>
         <Footer />
+        <Toaster
+          position="bottom-center"
+          toastOptions={{
+            style: {
+              background: "#654321",
+              color: "white",
+              borderRadius: "8px",
+              fontSize: "14px",
+            },
+          }}
+        />
       </body>
     </html>
   );

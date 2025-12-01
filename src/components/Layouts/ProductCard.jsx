@@ -19,9 +19,8 @@ const ProductCard = ({ product }) => {
 
   const currentProduct = product || defaultProduct;
   const isWishlisted = useAppStore((s) => s.isInWishlist(currentProduct._id));
-  const toggleWishlist = useAppStore((s) =>
-    isWishlisted ? s.removeFromWishlist : s.addToWishlist
-  );
+  const { addToWishlist, removeFromWishlist, isInWishlist, addToCart } =
+    useAppStore();
   // --- FIX: Works in Dev + Production + GridFS ---
   const resolveImage = (img) => {
     if (!img) return "/placeholder.png";
@@ -79,11 +78,20 @@ const ProductCard = ({ product }) => {
           <>
             {/* Wishlist Button */}
             <button
-              onClick={() => toggleWishlist(currentProduct)}
-              className={`absolute top-4 right-4 z-10 p-2 rounded-full shadow-md transition-all 
-             ${isWishlisted ? "bg-red-500 text-white" : "bg-white"}`}
+              className="absolute top-4 right-4 z-10 bg-white p-2 rounded-full shadow-md hover:scale-110 transition"
+              onClick={() =>
+                isInWishlist(currentProduct._id)
+                  ? removeFromWishlist(currentProduct._id)
+                  : addToWishlist(currentProduct)
+              }
             >
-              <HeartIcon className="h-5 w-5" />
+              <HeartIcon
+                className={`h-5 w-5 ${
+                  isInWishlist(currentProduct._id)
+                    ? "text-red-500"
+                    : "text-gray-700"
+                }`}
+              />
             </button>
 
             {/* Badges */}
@@ -126,8 +134,8 @@ const ProductCard = ({ product }) => {
             </span>
           )}
           <button
-            onClick={() => useAppStore.getState().addToCart(currentProduct)}
-            className="mt-3 w-full bg-[#654321] text-white py-2 rounded-lg hover:bg-[#7b4a2d] transition"
+            className="mt-3 w-full bg-[#654321] text-white py-2 rounded hover:bg-[#8b5a2b] transition"
+            onClick={() => addToCart(currentProduct)}
           >
             Add to Cart
           </button>
