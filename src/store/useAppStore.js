@@ -23,7 +23,7 @@ export const useAppStore = create((set, get) => ({
       const data = await res.json();
       set({ wishlist: data.wishlist || [] });
     } catch (err) {
-      toast.error("Failed to load wishlist");
+      // toast.error("Failed to load wishlist");
       console.error(err);
     } finally {
       set({ loadingWishlist: false });
@@ -97,7 +97,7 @@ export const useAppStore = create((set, get) => ({
 
       set({ cart: normalized });
     } catch (err) {
-      toast.error("Failed to load cart");
+      // toast.error("Failed to load cart");
       console.error(err);
     } finally {
       set({ loadingCart: false });
