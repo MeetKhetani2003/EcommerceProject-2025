@@ -6,9 +6,16 @@ export default function AppInitializer() {
   const { fetchCart, fetchWishlist } = useAppStore();
 
   useEffect(() => {
-    fetchCart();
-    fetchWishlist();
+    const token = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("auth="))
+      ?.split("=")[1];
+
+    if (token) {
+      fetchCart();
+      fetchWishlist();
+    }
   }, []);
 
-  return null; // no UI
+  return null;
 }

@@ -12,7 +12,7 @@ export default function HeroClient({ slides = [] }) {
 
   return (
     <div className="w-full mt-6">
-      <div className="max-w-[1400px] mx-auto px-4">
+      <div className="max-w-full ">
         <Swiper
           modules={[Autoplay, Pagination, Navigation]}
           autoplay={{ delay: 5000 }}

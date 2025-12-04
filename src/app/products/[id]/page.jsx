@@ -16,7 +16,7 @@ export default async function ProductDetails({ params }) {
   if (!product) return notFound();
 
   return (
-    <div className="bg-[#fafafa] min-h-screen">
+    <div className="bg-[##fff9f4] min-h-screen">
       <ProductDetailsClient product={JSON.parse(JSON.stringify(product))} />
     </div>
   );
