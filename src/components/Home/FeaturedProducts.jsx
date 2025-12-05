@@ -4,126 +4,95 @@ import ProductCard from "../Layouts/ProductCard";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay, Navigation } from "swiper/modules";
 
-// Import Swiper styles
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
 
-const FeaturedProducts = () => {
+// ---- Temporary Fake Data ----
+const dummyProducts = [
+  {
+    _id: "1",
+    name: "Oversized Anime Tee",
+    category: "T-Shirts",
+    price: { current: 999 },
+    imageFront: "/dummy/front1.jpg",
+    imageBack: "/dummy/back1.jpg",
+    availableSizes: ["S", "M", "L", "XL"],
+  },
+  {
+    _id: "2",
+    name: "Minimal Hoodie",
+    category: "Hoodies",
+    price: { current: 1899 },
+    imageFront: "/dummy/front2.jpg",
+    imageBack: "/dummy/back2.jpg",
+    availableSizes: ["M", "L", "XL"],
+  },
+  {
+    _id: "3",
+    name: "Vintage Denim Jacket",
+    category: "Jackets",
+    price: { current: 2499 },
+    imageFront: "/dummy/front3.jpg",
+    imageBack: "/dummy/back3.jpg",
+    availableSizes: ["L", "XL"],
+  },
+  {
+    _id: "4",
+    name: "Cartoon Hoodie",
+    category: "Hoodies",
+    price: { current: 1599 },
+    imageFront: "/dummy/front4.jpg",
+    imageBack: "/dummy/back4.jpg",
+    availableSizes: ["S", "M", "L", "XL"],
+  },
+];
+
+export default function FeaturedProducts({ products }) {
   const swiperRef = useRef(null);
 
-  // Sample product data - replace with your actual data
-  const products = [
-    { id: 1 },
-    { id: 2 },
-    { id: 3 },
-    { id: 4 },
-    { id: 5 },
-    { id: 6 },
-    { id: 7 },
-    { id: 8 },
-    { id: 9 },
-    { id: 10 },
-    { id: 11 },
-    { id: 12 },
-  ];
+  // if real product not passed then use dummy
+  const list = products?.length ? products : dummyProducts;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h2 className="text-center font-semibold text-[26px] md:text-[30px] tracking-wider text-neutral-800 mb-10">
-        FEATURED PRODUCTS
-      </h2>
-      <div className="relative">
-        <Swiper
-          modules={[Pagination, Autoplay, Navigation]}
-          spaceBetween={24}
-          slidesPerView={1}
-          onSwiper={(swiper) => {
-            swiperRef.current = swiper; // Store swiper instance
-          }}
-          breakpoints={{
-            // Mobile (< 640px)
-            0: {
-              slidesPerView: 1,
-              spaceBetween: 16,
-            },
-            // Tablet (≥ 640px)
-            640: {
-              slidesPerView: 2,
-              spaceBetween: 20,
-            },
-            // Laptop (≥ 1024px)
-            1024: {
-              slidesPerView: 3,
-              spaceBetween: 24,
-            },
-            // Desktop (≥ 1280px)
-            1280: {
-              slidesPerView: 4,
-              spaceBetween: 24,
-            },
-          }}
-          autoplay={{
-            delay: 3000,
-            disableOnInteraction: false,
-          }}
-          pagination={{
-            clickable: true,
-            dynamicBullets: true,
-          }}
-          loop={true}
-          className="featured-swiper"
-        >
-          {products.map((product) => (
-            <SwiperSlide key={product.id}>
-              <div className="h-full">
-                <ProductCard />
-              </div>
-            </SwiperSlide>
-          ))}
-        </Swiper>
+    <section className="py-12 bg-[#fafafa]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* ---- HEADING ---- */}
+        <div className="text-center mb-10">
+          <p className="text-[12px] tracking-[0.25em] text-neutral-500 uppercase">
+            Curated Picks
+          </p>
+          <h2 className="font-semibold text-[26px] md:text-[32px] tracking-wide text-neutral-900 mt-2">
+            FEATURED PRODUCTS
+          </h2>
+          <span className="block mx-auto w-20 h-[2px] mt-3 bg-neutral-900 rounded-full"></span>
+        </div>
 
-        {/* Custom Navigation Buttons - ✅ 100% WORKING */}
-        <button
-          className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white/90 hover:bg-white shadow-lg rounded-full flex items-center justify-center text-gray-600 hover:text-gray-800 transition-all duration-300 group"
-          onClick={() => swiperRef.current?.slidePrev()}
-        >
-          <svg
-            className="w-6 h-6 group-hover:-translate-x-1 transition-transform duration-300"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+        {/* ---- SLIDER ---- */}
+        <div className="relative">
+          <Swiper
+            modules={[Pagination, Autoplay, Navigation]}
+            autoplay={{ delay: 3500, disableOnInteraction: false }}
+            loop
+            pagination={{ clickable: true, dynamicBullets: true }}
+            onSwiper={(swiper) => (swiperRef.current = swiper)}
+            breakpoints={{
+              0: { slidesPerView: 1 },
+              640: { slidesPerView: 2 },
+              1024: { slidesPerView: 3 },
+              1280: { slidesPerView: 4 },
+            }}
+            spaceBetween={24}
+            className="pb-12"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
-        </button>
-
-        <button
-          className="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white/90 hover:bg-white shadow-lg rounded-full flex items-center justify-center text-gray-600 hover:text-gray-800 transition-all duration-300 group"
-          onClick={() => swiperRef.current?.slideNext()}
-        >
-          <svg
-            className="w-6 h-6 group-hover:translate-x-1 transition-transform duration-300"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
-        </button>
+            {list.map((item) => (
+              <SwiperSlide key={item._id}>
+                <ProductCard product={item} />
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        </div>
       </div>
-    </div>
+    </section>
   );
-};
-
-export default FeaturedProducts;
+}

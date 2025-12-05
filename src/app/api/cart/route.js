@@ -4,7 +4,7 @@ import Products from "@/models/Products";
 import User from "@/models/User";
 import { jwtDecode } from "jwt-decode";
 import { cookies } from "next/headers";
-
+import jwt from "jsonwebtoken";
 /**
  * GET /api/cart
  */
@@ -16,18 +16,22 @@ export async function GET() {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
   const decoded = jwtDecode(token);
+  console.log(decoded);
 
   await connectDb();
 
   const populatedUser = await User.findById(decoded.userId).populate(
     "cart.product"
   );
-
   const items = populatedUser.cart.map((item) => ({
     _id: item.product._id,
+    name: item.product.name,
     qty: item.qty,
-    product: item.product.toObject({ virtuals: true }),
+    selectedSize: item.size, // ← FINAL
+    price: item.product.price,
+    imageFront: item.product.imageFront,
   }));
+  console.log(items);
 
   return NextResponse.json({ status: "success", cart: items });
 }
@@ -35,39 +39,48 @@ export async function GET() {
 /**
  * POST /api/cart
  */
-export async function POST(request) {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("auth")?.value;
+export async function POST(req) {
+  try {
+    await connectDb();
 
-  if (!token)
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    const cookieStore = await cookies(); // 👈 required now
+    const token = cookieStore.get("auth")?.value;
 
-  const decoded = jwtDecode(token);
+    if (!token) {
+      return NextResponse.json(
+        { success: false, message: "Unauthorized" },
+        { status: 401 }
+      );
+    }
 
-  await connectDb();
-  const user = await User.findById(decoded.userId);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const { productId, qty, size } = await req.json();
 
-  const { productId, qty = 1 } = await request.json();
-  if (!productId)
-    return NextResponse.json(
-      { message: "productId required" },
-      { status: 400 }
+    const user = await User.findById(decoded.userId);
+
+    if (!user) return NextResponse.json({ success: false }, { status: 404 });
+
+    const exists = user.cart.find(
+      (i) => i.product.toString() === productId && i.size === size
     );
 
-  const product = await Products.findById(productId);
-  if (!product)
-    return NextResponse.json({ message: "Product not found" }, { status: 404 });
+    if (exists) {
+      exists.qty += qty;
+    } else {
+      user.cart.push({ product: productId, qty, size });
+    }
 
-  const index = user.cart.findIndex(
-    (item) => item.product.toString() === productId
-  );
+    await user.save();
 
-  if (index === -1) user.cart.push({ product: productId, qty });
-  else user.cart[index].qty += qty;
+    return NextResponse.json({ success: true }, { status: 200 });
+  } catch (err) {
+    console.log(err);
 
-  await user.save();
-
-  return NextResponse.json({ status: "success" });
+    return NextResponse.json(
+      { success: false, message: err.message },
+      { status: 500 }
+    );
+  }
 }
 
 /**
@@ -85,7 +98,8 @@ export async function PATCH(request) {
   await connectDb();
   const user = await User.findById(decoded.userId);
 
-  const { productId, qty } = await request.json();
+  const { productId, selectedSize, qty } = await request.json();
+
   if (!productId || typeof qty !== "number")
     return NextResponse.json(
       { message: "productId & qty required" },
@@ -93,7 +107,8 @@ export async function PATCH(request) {
     );
 
   const index = user.cart.findIndex(
-    (item) => item.product.toString() === productId
+    (item) =>
+      item.product.toString() === productId && item.size === selectedSize
   );
 
   if (index === -1)
@@ -124,6 +139,7 @@ export async function DELETE(request) {
 
   const { searchParams } = new URL(request.url);
   const productId = searchParams.get("productId");
+  const selectedSize = searchParams.get("size");
 
   if (!productId)
     return NextResponse.json(
@@ -131,7 +147,10 @@ export async function DELETE(request) {
       { status: 400 }
     );
 
-  user.cart = user.cart.filter((item) => item.product.toString() !== productId);
+  user.cart = user.cart.filter(
+    (item) =>
+      !(item.product.toString() === productId && item.size === selectedSize)
+  );
 
   await user.save();
 

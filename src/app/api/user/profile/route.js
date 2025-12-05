@@ -1,41 +1,61 @@
 import { connectDb } from "@/lib/dbConnect";
 import User from "@/models/User";
-import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-
+import jwt from "jsonwebtoken";
 export async function GET() {
   try {
     await connectDb();
 
     const cookieStore = await cookies();
     const token = cookieStore.get("auth")?.value;
-
-    if (!token) {
-      return NextResponse.json(
-        { success: false, user: null, message: "No token found" },
-        { status: 200 }
-      );
-    }
+    if (!token) return NextResponse.json({ success: false, user: null });
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.log(decoded);
 
     const user = await User.findById(decoded.userId).select("-password");
 
-    if (!user) {
-      return NextResponse.json(
-        { success: false, user: null, message: "User not found" },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({ success: true, user }, { status: 200 });
+    return NextResponse.json({
+      success: true,
+      user: {
+        _id: user._id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        addresses: user.addresses || [],
+        defaultAddress: user.defaultAddress ?? 0,
+      },
+    });
   } catch (error) {
-    console.log("GET USER ERROR:", error);
-    return NextResponse.json(
-      { success: false, user: null, message: error.message },
-      { status: 500 }
+    return NextResponse.json({ success: false, error: error.message });
+  }
+}
+
+export async function PATCH(req) {
+  try {
+    await connectDb();
+
+    const cookieStore = await cookies();
+    const token = cookieStore.get("auth")?.value;
+    console.log("------------------------");
+
+    if (!token) {
+      return NextResponse.json({ success: false, message: "Unauthorized" });
+    }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const body = await req.json(); // expects { addresses, defaultAddress }
+    console.log(
+      "========================================================",
+      body
     );
+
+    await User.findByIdAndUpdate(decoded.userId, {
+      addresses: body.addresses,
+      defaultAddress: body.defaultAddress,
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    return NextResponse.json({ success: false, error: error.message });
   }
 }

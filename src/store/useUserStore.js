@@ -7,33 +7,23 @@ export const useUserStore = create((set, get) => ({
   error: null,
   initialized: false,
 
+  setUser: (updatedUser) => set({ user: updatedUser }),
+
   getUser: async (force = false) => {
-    // If already loaded and not forcing refresh, skip request
     if (get().initialized && !force) return;
 
     set({ loading: true, error: null });
 
     try {
-      const res = await axios.get("http://localhost:3000/api/user/profile", {
-        cache: "no-store",
+      const res = await axios.get("/api/user/profile", {
+        withCredentials: true,
       });
-      console.log(res);
-      const data = await res.data;
 
-      if (!data.success) {
-        set({
-          user: null,
-          loading: false,
-          error: data.message || "Failed to fetch user",
-          initialized: true,
-        });
-        return;
-      }
+      const data = res.data;
 
       set({
-        user: data.user,
+        user: data?.user || null,
         loading: false,
-        error: null,
         initialized: true,
       });
     } catch (error) {
@@ -46,8 +36,25 @@ export const useUserStore = create((set, get) => ({
     }
   },
 
+  updateUserProfile: async (payload) => {
+    try {
+      const res = await axios.patch("/api/user/profile", payload, {
+        withCredentials: true,
+      });
+      console.log(res);
+
+      if (res.data?.user) {
+        set({ user: res.data.user });
+      }
+
+      return res.data;
+    } catch (err) {
+      console.error(err);
+    }
+  },
+
   logout: async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
+    await axios.post("/api/auth/logout", {}, { withCredentials: true });
     set({ user: null, initialized: false });
   },
 }));

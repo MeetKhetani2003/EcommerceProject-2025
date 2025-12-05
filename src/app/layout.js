@@ -4,6 +4,7 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import { Toaster } from "react-hot-toast";
 import AppInitializer from "@/components/AppInitializer";
 import LayoutControl from "@/app/ClientChildren";
+import ClientBridge from "./ClientBridge";
 
 export const metadata = {
   title: "Create Next App",
@@ -13,13 +14,17 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
+      <head>
+        <script
+          src="https://checkout.razorpay.com/v1/checkout.js"
+          async
+        ></script>
+      </head>
       <body>
         <GoogleOAuthProvider
           clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}
         >
-          <AppInitializer />
-
-          <LayoutControl>{children}</LayoutControl>
+          <ClientBridge>{children}</ClientBridge>
         </GoogleOAuthProvider>
 
         <Toaster

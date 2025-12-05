@@ -7,6 +7,10 @@ const CartItemSchema = new Schema(
       ref: "Product",
       required: true,
     },
+    selectedSize: {
+      type: String,
+      required: true,
+    },
     qty: {
       type: Number,
       default: 1,
@@ -15,6 +19,7 @@ const CartItemSchema = new Schema(
   },
   { _id: false }
 );
+
 const addressSchema = new mongoose.Schema({
   street: {
     type: String,
@@ -88,7 +93,14 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
     profilePicture: String,
-    address: addressSchema,
+    /** 🏠 MULTIPLE ADDRESSES SUPPORTED HERE */
+    addresses: [addressSchema],
+
+    /** ⭐ OPTIONAL DEFAULT SELECTED ADDRESS INDEX */
+    defaultAddress: {
+      type: Number,
+      default: 0,
+    },
     role: {
       type: String,
       enum: ["user", "admin", "moderator"],
