@@ -1,4 +1,6 @@
 "use client";
+import { redirect } from "next/navigation";
+import toast from "react-hot-toast";
 import { create } from "zustand";
 
 export const useCartStore = create((set) => ({
@@ -11,31 +13,48 @@ export const useCartStore = create((set) => ({
   },
 
   addToCart: async (product) => {
-    console.log("Oye dekh", product);
-    if (product?.size) {
-      product.selectedSize = product.size;
-    }
-    console.log("Idhar oye pagal", product);
+    if (product?.size) product.selectedSize = product.size;
 
     if (!product?._id || !product?.selectedSize) {
-      console.warn("❌ Missing productId or size in addToCart");
+      toast.error("Select a size first! 😒");
       return;
     }
 
-    await fetch("/api/user/cart", {
-      method: "POST",
-      cache: "no-store",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        productId: product._id,
-        size: product.selectedSize,
-      }),
-    });
+    try {
+      const res = await fetch("/api/user/cart", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productId: product._id,
+          size: product.selectedSize,
+        }),
+      });
+
+      const data = await res.json();
+
+      // 🔥 LOGIN NOT DONE
+      if (res.status === 401) {
+        toast.error("Login Required 🔐");
+        window.location.href = "/auth";
+        return;
+      }
+
+      // 🔥 BACKEND ERROR
+      if (!data.success) {
+        toast.error(data.message || "Something went wrong 😵");
+        return;
+      }
+
+      // 🔥 SUCCESS
+      toast.success(`Added to cart 🛍️ (Size: ${product.selectedSize})`);
+    } catch (error) {
+      toast.error("Server error 💀 Try again.");
+      console.error(error);
+    }
 
     await useCartStore.getState().fetchCart();
   },
-
   updateQty: async (productId, size, qty) => {
     await fetch(`/api/user/cart?productId=${productId}&size=${size}`, {
       method: "PATCH",
@@ -54,5 +73,8 @@ export const useCartStore = create((set) => ({
     });
 
     await useCartStore.getState().fetchCart();
+  },
+  cartCount: () => {
+    return useCartStore.getState().cart.reduce((t, item) => t + item.qty, 0);
   },
 }));

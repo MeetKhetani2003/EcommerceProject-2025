@@ -28,8 +28,14 @@ export async function GET() {
 // ADD / UPDATE
 export async function POST(req) {
   await connectDb();
-  const token = (await cookies()).get("auth")?.value;
-  if (!token) return NextResponse.json({ success: false }, { status: 401 });
+  const cookieStore = await cookies();
+  const token = cookieStore.get("auth")?.value;
+  if (!token) {
+    return NextResponse.json(
+      { success: false, message: "Login Required" },
+      { status: 401 }
+    );
+  }
 
   const decoded = jwt.verify(token, process.env.JWT_SECRET);
   const { productId, size } = await req.json();
@@ -44,7 +50,10 @@ export async function POST(req) {
   else user.cart.push({ product: productId, selectedSize: size, qty: 1 });
 
   await user.save();
-  return NextResponse.json({ success: true });
+  return NextResponse.json({
+    success: true,
+    message: "Item added to cart",
+  });
 }
 
 // UPDATE QTY

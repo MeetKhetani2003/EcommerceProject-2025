@@ -127,7 +127,6 @@ export default function ProductCard({ product }) {
           close={() => setShowSizeModal(false)}
           onSelect={(size) => {
             addToCart({ ...item, selectedSize: size });
-            toast.success(`Added to cart 🛍 (Size: ${size})`);
             setShowSizeModal(false);
           }}
         />

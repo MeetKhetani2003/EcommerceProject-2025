@@ -44,7 +44,7 @@ const SignupFormOrganism = () => {
         toast.error(data.message || "Signup failed.");
       } else {
         toast.success("Signup successful 🎉");
-        router.push("/");
+        // router.push("/");
       }
     } catch (error) {
       toast.error("Something went wrong. Try again.");

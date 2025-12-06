@@ -17,6 +17,7 @@ import WishlistModal from "./WishlistModal";
 import CartModal from "./CartModal";
 import { Heart, ShoppingCart, User } from "lucide-react";
 import { useUserStore } from "@/store/useUserStore";
+import { useCartStore } from "@/store/useCartStore";
 // import { jwtDecode } from "jwt-decode";
 // import { cookies } from "next/headers";
 
@@ -99,14 +100,14 @@ const NavBar = () => {
   //   cartCount: s.cartCount(),
   // }));
   const { user, loading, getUser } = useUserStore();
-
+  const fetchCart = useCartStore((s) => s.fetchCart);
   useEffect(() => {
     getUser();
-  }, []);
-  console.log(user);
+    fetchCart();
+  }, [getUser, fetchCart]);
 
   const wishlistCount = useAppStore((s) => s.wishlist.length);
-  const cartCount = useAppStore((s) => s.cartCount());
+  const cartCount = useCartStore((s) => s.cartCount());
   // Toggle the main sidebar and control body scrolling
   const toggleSidebar = () => {
     const newState = !isSidebarOpen;
@@ -378,6 +379,7 @@ const NavBar = () => {
               </span>
             )}
           </button>
+
           {/* Search icon for Mobile */}
           <button
             className={`sm:hidden ${PALETTE.TEXT_PRIMARY} ${PALETTE.HOVER_ACCENT}`}
