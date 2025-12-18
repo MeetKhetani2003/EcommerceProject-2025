@@ -11,8 +11,8 @@ export default function HeroClient({ slides = [] }) {
   if (!slides.length) return null;
 
   return (
-    <div className="w-full mt-6">
-      <div className="max-w-full ">
+    <div className="w-full">
+      <div className="max-w-full mx-4">
         <Swiper
           modules={[Autoplay, Pagination, Navigation]}
           autoplay={{ delay: 5000 }}
@@ -24,7 +24,7 @@ export default function HeroClient({ slides = [] }) {
         >
           {slides.map((slide, i) => (
             <SwiperSlide key={i}>
-              <div className="w-full h-[260px] sm:h-[320px] md:h-[380px] lg:h-[440px] xl:h-[480px] rounded-lg overflow-hidden bg-[#f5f5f5] relative">
+              <div className="w-full h-[260px] sm:h-[320px] md:h-[380px] lg:h-[520px]  overflow-hidden bg-[#f5f5f5] relative ">
                 {slide.type === "image" && (
                   <img
                     src={slide.url}
