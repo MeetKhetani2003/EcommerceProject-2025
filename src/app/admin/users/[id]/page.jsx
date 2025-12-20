@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useApiClient } from "../lib/api";
+import { useApiClient } from "../../lib/api";
 
 export default function UserDetail({ params }) {
   const id = params.id;
