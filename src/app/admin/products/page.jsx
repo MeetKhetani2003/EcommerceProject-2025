@@ -2,6 +2,7 @@
 import { useRouter } from "next/navigation";
 import Pagination from "../components/Pagination";
 import { useApiClient } from "../lib/api";
+import { useState } from "react";
 
 export default function ProductsPage() {
   const api = useApiClient();
