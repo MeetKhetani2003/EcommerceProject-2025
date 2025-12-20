@@ -18,6 +18,7 @@ export const useUserStore = create((set, get) => ({
       const res = await axios.get("/api/user/profile", {
         withCredentials: true,
       });
+      console.log(res);
 
       const data = res.data;
 

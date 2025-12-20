@@ -3,6 +3,8 @@ import User from "@/models/User";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
+import "@/models/Order";
+import "@/models/Products";
 export async function GET() {
   try {
     await connectDb();
@@ -13,7 +15,19 @@ export async function GET() {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    const user = await User.findById(decoded.userId).select("-password");
+    const user = await User.findById(decoded.userId)
+      .select("-password")
+      .populate([
+        {
+          path: "orderHistory.order",
+          populate: {
+            path: "items.product",
+          },
+        },
+        { path: "wishlist" },
+        { path: "cart.product" },
+      ])
+      .lean(); // ✅ faster + safer
 
     return NextResponse.json({
       success: true,
@@ -24,6 +38,9 @@ export async function GET() {
         lastName: user.lastName,
         addresses: user.addresses || [],
         defaultAddress: user.defaultAddress ?? 0,
+        cart: user.cart || [],
+        wishlist: user.wishlist || [],
+        orderHistory: user.orderHistory || [],
       },
     });
   } catch (error) {

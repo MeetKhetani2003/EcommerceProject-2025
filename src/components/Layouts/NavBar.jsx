@@ -98,6 +98,7 @@ const NavBar = () => {
     getUser();
     fetchCart();
   }, [getUser, fetchCart]);
+  console.log(user);
 
   // compute available height for mega menu body
   const computeMegaMaxHeight = (menuOpenName) => {

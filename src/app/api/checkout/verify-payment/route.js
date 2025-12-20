@@ -24,8 +24,6 @@ export async function POST(req) {
     // userId, // IMPORTANT → Required
   } = body;
 
-  console.log("🔥 Backend received userId:", userId);
-
   // ---- FIX: If still missing → return error
   if (!userId) {
     return Response.json({
@@ -33,7 +31,7 @@ export async function POST(req) {
       message: "❌ UserID missing while saving order.",
     });
   }
-
+  const userData = await User.findOne({ _id: userId });
   // ---- Signature Verification
   const secret = process.env.RAZORPAY_SECRET;
   const hash = crypto
@@ -67,6 +65,15 @@ export async function POST(req) {
   });
 
   newOrder = await Order.findById(newOrder._id).populate("items.product");
+  const newuserData = await User.findByIdAndUpdate(
+    userId,
+    {
+      $push: {
+        orderHistory: { order: newOrder._id },
+      },
+    },
+    { new: true }
+  );
 
   // ---- Generate Invoice PDF
   const pdf = await generateInvoice(newOrder);

@@ -83,7 +83,7 @@ const userSchema = new mongoose.Schema(
       },
       sparse: true,
     },
-
+    orderHistory: [{ order: { type: Schema.Types.ObjectId, ref: "Orders" } }],
     firstName: {
       type: String,
       trim: true,
