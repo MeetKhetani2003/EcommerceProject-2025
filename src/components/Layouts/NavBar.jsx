@@ -420,7 +420,7 @@ const NavBar = () => {
             <FiUser className="w-6 h-6" />
           </Link>
 
-          <button onClick={() => setWishlistOpen(true)} className="relative">
+          <button onClick={() => redirect("/whishlist")} className="relative">
             <Heart className="w-6 h-6 text-[#654321]" />
             {wishlistCount > 0 && (
               <span className="absolute -top-1 -right-2 text-xs bg-[#654321] text-white rounded-full px-1">

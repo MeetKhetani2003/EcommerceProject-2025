@@ -51,7 +51,13 @@ export default function CartPage() {
     fetchCart();
     getUser();
 
-    gsap.from(".cart-page-wrap", { opacity: 0, y: 10, duration: 0.4 });
+    gsap.set(".cart-page-wrap", { opacity: 1, y: 0 });
+
+    gsap.fromTo(
+      ".cart-page-wrap",
+      { opacity: 0, y: 10 },
+      { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" }
+    );
     // ensure Razorpay lib available later when needed
     if (typeof window !== "undefined" && !window.Razorpay) {
       const s = document.createElement("script");
