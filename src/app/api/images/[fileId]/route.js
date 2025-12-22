@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { GridFSBucket } from "mongodb";
 import { connectDb } from "@/lib/dbConnect";
+import Products from "@/models/Products";
+import { deleteFromGridFs } from "@/lib/gridFsClient";
 
 export const dynamic = "force-dynamic"; // always run on server, let CDN cache via headers
 
@@ -119,6 +121,60 @@ export async function GET(request, context) {
     console.error("GridFS Image Route Error:", error);
     return NextResponse.json(
       { message: "Internal server error", details: error.message },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(req, context) {
+  const { fileId } = await context.params; // ✅ FIX
+
+  try {
+    await connectDb();
+
+    const { searchParams } = new URL(req.url);
+    const productId = searchParams.get("productId");
+    const type = searchParams.get("type"); // front | back | gallery
+
+    if (!productId || !type) {
+      return NextResponse.json(
+        { message: "productId and type required" },
+        { status: 400 }
+      );
+    }
+
+    const product = await Products.findById(productId);
+    if (!product) {
+      return NextResponse.json(
+        { message: "Product not found" },
+        { status: 404 }
+      );
+    }
+
+    if (type === "front") {
+      product.imageFrontFileId = undefined;
+      product.imageFrontFilename = undefined;
+    }
+
+    if (type === "back") {
+      product.imageBackFileId = undefined;
+      product.imageBackFilename = undefined;
+    }
+
+    if (type === "gallery") {
+      product.gallery = product.gallery.filter(
+        (img) => img.fileId.toString() !== fileId
+      );
+    }
+
+    await product.save(); // ✅ no `next()` crash anymore
+    await deleteFromGridFs(new mongoose.Types.ObjectId(fileId));
+
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error("DELETE IMAGE ERROR:", err);
+    return NextResponse.json(
+      { message: "Delete failed", error: err.message },
       { status: 500 }
     );
   }

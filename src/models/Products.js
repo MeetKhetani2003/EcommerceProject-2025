@@ -131,8 +131,8 @@ ProductSchema.index(
 /** ----------------------------------
 🔥 PRE-SAVE HOOK WITH SLUG BUILDER
 ---------------------------------- **/
-ProductSchema.pre("save", async function (next) {
-  if (!this.isModified("name")) return next();
+ProductSchema.pre("save", async function () {
+  if (!this.isModified("name")) return;
 
   const baseSlug = slugify(this.name, {
     lower: true,
@@ -148,7 +148,6 @@ ProductSchema.pre("save", async function (next) {
   }
 
   this.slug = newSlug;
-  next();
 });
 
 export default mongoose.models.Product ||

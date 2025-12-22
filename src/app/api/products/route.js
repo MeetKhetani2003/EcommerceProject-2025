@@ -322,3 +322,110 @@ export async function DELETE(request) {
     );
   }
 }
+
+export async function PUT(request) {
+  await connectDb();
+
+  const uploadedFileIds = [];
+
+  try {
+    const formData = await request.formData();
+
+    const productId = formData.get("productId");
+    const productJson = formData.get("productData");
+
+    if (!productId || !productJson) {
+      return NextResponse.json(
+        { message: "productId and productData are required" },
+        { status: 400 }
+      );
+    }
+
+    const product = await Products.findById(productId);
+    if (!product) {
+      return NextResponse.json(
+        { message: "Product not found" },
+        { status: 404 }
+      );
+    }
+
+    const productData = JSON.parse(productJson);
+
+    const imageFrontFile = formData.get("imageFront");
+    const imageBackFile = formData.get("imageBack");
+    const galleryFiles = formData.getAll("galleryImages");
+
+    /* ---------------- FRONT IMAGE ---------------- */
+    if (imageFrontFile && imageFrontFile.size > 0) {
+      if (product.imageFrontFileId) {
+        await deleteFromGridFs(product.imageFrontFileId.toString());
+      }
+
+      const front = await uploadToBlob(imageFrontFile);
+      uploadedFileIds.push(front.id.toString());
+
+      product.imageFrontFileId = front.id;
+      product.imageFrontFilename = front.filename;
+    }
+
+    /* ---------------- BACK IMAGE ---------------- */
+    if (imageBackFile && imageBackFile.size > 0) {
+      if (product.imageBackFileId) {
+        await deleteFromGridFs(product.imageBackFileId.toString());
+      }
+
+      const back = await uploadToBlob(imageBackFile);
+      uploadedFileIds.push(back.id.toString());
+
+      product.imageBackFileId = back.id;
+      product.imageBackFilename = back.filename;
+    }
+
+    /* ---------------- GALLERY (APPEND) ---------------- */
+    if (galleryFiles?.length) {
+      const validGalleryFiles = galleryFiles.filter(
+        (f) => f instanceof File && f.size > 0
+      );
+
+      for (const file of validGalleryFiles) {
+        const result = await uploadToBlob(file);
+        uploadedFileIds.push(result.id.toString());
+
+        product.gallery.push({
+          fileId: result.id,
+          filename: result.filename,
+        });
+      }
+    }
+
+    /* ---------------- UPDATE FIELDS ---------------- */
+    Object.assign(product, {
+      ...productData,
+      price: productData.price,
+      mainCategory: productData.mainCategory,
+    });
+
+    await product.save();
+
+    return NextResponse.json({
+      status: "success",
+      product: product.toObject({ virtuals: true }),
+    });
+  } catch (error) {
+    console.error("Product PUT Error:", error);
+
+    // rollback newly uploaded files
+    if (uploadedFileIds.length) {
+      await Promise.all(uploadedFileIds.map((id) => deleteFromGridFs(id)));
+    }
+
+    return NextResponse.json(
+      {
+        status: "error",
+        message: "Failed to update product",
+        details: error.message,
+      },
+      { status: 500 }
+    );
+  }
+}
