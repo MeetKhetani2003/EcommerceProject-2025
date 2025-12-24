@@ -4,7 +4,60 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 /* --------------------------------- */
-/* --------- TABS ------------------ */
+/* -------- CATEGORY DATA ----------- */
+/* --------------------------------- */
+
+const CATEGORY_MAP = {
+  clothes: {
+    Shirts: [
+      "Half Sleeve",
+      "Full Sleeve",
+      "Linen",
+      "Embroidered",
+      "Designer",
+      "Office Wear",
+      "Check",
+      "Plain",
+      "Imported",
+      "Denim",
+    ],
+    "Polo T-Shirts": [],
+    "Round Neck T-Shirts": ["Crew Neck", "Drop Shoulder", "Oversized"],
+    "Winter Wear": ["Jackets", "Sweaters", "Sweatshirts"],
+    "Full Sleeve T-Shirts": [],
+    Denim: [
+      "Ankle Fit",
+      'Straight Fit (14")',
+      "Comfort Narrow",
+      'Regular Fit (16", 18")',
+      "Baggy Fit",
+    ],
+    "Cotton / Chinos": ["Ankle Fit", "Comfort Fit"],
+    "Formal Pants": ["Ankle Fit", "Straight Fit", "Comfort Fit"],
+    "Track Pants": [
+      "Dry Fit Fabric",
+      "Cotton Fleece Fabric",
+      "Ankle Fit",
+      "Straight Fit",
+    ],
+    "Dry Fit T-Shirts": ["Round Neck", "Collar Free"],
+  },
+
+  shoes: {
+    Shoes: ["Sports Shoes", "Sneakers"],
+    Slippers: ["Flip Flops", "Strap Slippers"],
+    Crocs: ["Men", "Women"],
+  },
+
+  accessories: {
+    "Perfume / Deo": ["Replica", "Indian Made", "Premium Collection"],
+    Deodorants: ["Gas Deo", "Water Deo"],
+    Watches: ["Analog", "Battery", "Automatic"],
+  },
+};
+
+/* --------------------------------- */
+/* -------- TABS -------------------- */
 /* --------------------------------- */
 
 const TABS = {
@@ -14,7 +67,7 @@ const TABS = {
 };
 
 /* --------------------------------- */
-/* --------- MAIN PAGE ------------- */
+/* -------- MAIN PAGE --------------- */
 /* --------------------------------- */
 
 export default function AdminProducts() {
@@ -69,7 +122,7 @@ export default function AdminProducts() {
 }
 
 /* --------------------------------- */
-/* --------- PRODUCT LIST ---------- */
+/* -------- PRODUCT LIST ------------ */
 /* --------------------------------- */
 
 function ProductList({ onEdit }) {
@@ -91,12 +144,6 @@ function ProductList({ onEdit }) {
         <div>Status</div>
         <div className="text-right">Actions</div>
       </div>
-
-      {products.length === 0 && (
-        <div className="px-4 py-10 text-center text-gray-500 text-sm">
-          No products found
-        </div>
-      )}
 
       {products.map((p) => (
         <div
@@ -124,12 +171,16 @@ function ProductList({ onEdit }) {
 }
 
 /* --------------------------------- */
-/* --------- CREATE / EDIT ---------- */
+/* -------- CREATE / EDIT ----------- */
 /* --------------------------------- */
 
 function CreateProduct({ productId, onSuccess }) {
   const isEdit = !!productId;
   const [product, setProduct] = useState(null);
+
+  const [mainCategory, setMainCategory] = useState("");
+  const [category, setCategory] = useState("");
+  const [subcategory, setSubcategory] = useState("");
 
   const [flags, setFlags] = useState({
     isNewArrival: false,
@@ -137,74 +188,47 @@ function CreateProduct({ productId, onSuccess }) {
     featured: false,
   });
 
-  /* ---------- LOAD PRODUCT ---------- */
   useEffect(() => {
-    if (!productId) {
-      setProduct(null);
-      setFlags({
-        isNewArrival: false,
-        isBestseller: false,
-        featured: false,
-      });
-      return;
-    }
+    if (!productId) return;
 
     fetch(`/api/products/${productId}`)
       .then((r) => r.json())
       .then((d) => {
-        setProduct(d.product);
+        const p = d.product;
+        setProduct(p);
+        setMainCategory(p.mainCategory || "");
+        setCategory(p.category || "");
+        setSubcategory(p.subcategory || "");
         setFlags({
-          isNewArrival: !!d.product.isNewArrival,
-          isBestseller: !!d.product.isBestseller,
-          featured: !!d.product.featured,
+          isNewArrival: !!p.isNewArrival,
+          isBestseller: !!p.isBestseller,
+          featured: !!p.featured,
         });
       });
   }, [productId]);
 
-  /* ---------- DELETE IMAGE ---------- */
-  async function deleteImage(productId, fileId, type) {
-    if (!confirm("Remove this image?")) return;
-
-    const res = await fetch(
-      `/api/images/${fileId}?productId=${productId}&type=${type}`,
-      { method: "DELETE" }
-    );
-
-    if (!res.ok) {
-      alert("Failed to delete image");
-      return;
-    }
-
-    const refreshed = await fetch(`/api/products/${productId}`).then((r) =>
-      r.json()
-    );
-    setProduct(refreshed.product);
-  }
-
-  /* ---------- SUBMIT ---------- */
   async function handleSubmit(e) {
     e.preventDefault();
     const f = e.target;
     const fd = new FormData();
 
-    // SAFE FILE ACCESS
-    const front = f.elements.namedItem("imageFront");
-    if (front?.files?.[0]) fd.append("imageFront", front.files[0]);
+    const front = f.imageFront?.files?.[0];
+    const back = f.imageBack?.files?.[0];
+    if (front) fd.append("imageFront", front);
+    if (back) fd.append("imageBack", back);
 
-    const back = f.elements.namedItem("imageBack");
-    if (back?.files?.[0]) fd.append("imageBack", back.files[0]);
-
-    const gallery = f.elements.namedItem("galleryImages");
-    if (gallery?.files?.length) {
-      [...gallery.files].forEach((file) => fd.append("galleryImages", file));
+    if (f.galleryImages?.files?.length) {
+      [...f.galleryImages.files].forEach((img) =>
+        fd.append("galleryImages", img)
+      );
     }
 
     const productData = {
       name: f.name.value,
       brand: f.brand.value,
-      category: f.category.value,
-      subcategory: f.subcategory.value,
-      mainCategory: f.mainCategory.value,
+      mainCategory,
+      category,
+      subcategory,
       price: {
         current: Number(f.priceCurrent.value),
         old: Number(f.priceOld.value),
@@ -213,9 +237,7 @@ function CreateProduct({ productId, onSuccess }) {
       stock: Number(f.stock.value),
       salesCount: Number(f.salesCount.value),
       description: f.description.value,
-      isNewArrival: flags.isNewArrival,
-      isBestseller: flags.isBestseller,
-      featured: flags.featured,
+      ...flags,
     };
 
     fd.append("productData", JSON.stringify(productData));
@@ -225,18 +247,13 @@ function CreateProduct({ productId, onSuccess }) {
       method: isEdit ? "PUT" : "POST",
       body: fd,
     });
-    console.log(res);
 
-    if (!res.ok) {
-      alert("Failed to save product");
-      return;
-    }
+    if (!res.ok) return alert("Failed to save product");
 
-    toast.success("Product Created");
+    toast.success(isEdit ? "Product Updated" : "Product Created");
     onSuccess();
   }
 
-  /* ---------- FORM ---------- */
   return (
     <form
       onSubmit={handleSubmit}
@@ -255,24 +272,53 @@ function CreateProduct({ productId, onSuccess }) {
       {/* CATEGORY */}
       <div className="grid md:grid-cols-3 gap-4">
         <Select
-          name="mainCategory"
           label="Main Category"
-          defaultValue={product?.mainCategory}
+          value={mainCategory}
+          onChange={(e) => {
+            setMainCategory(e.target.value);
+            setCategory("");
+            setSubcategory("");
+          }}
         >
+          <option value="">Select Main Category</option>
           <option value="clothes">Clothes</option>
           <option value="shoes">Shoes</option>
           <option value="accessories">Accessories</option>
         </Select>
-        <Input
-          name="category"
+
+        <Select
           label="Category"
-          defaultValue={product?.category}
-        />
-        <Input
-          name="subcategory"
+          value={category}
+          disabled={!mainCategory}
+          onChange={(e) => {
+            setCategory(e.target.value);
+            setSubcategory("");
+          }}
+        >
+          <option value="">Select Category</option>
+          {mainCategory &&
+            Object.keys(CATEGORY_MAP[mainCategory]).map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+        </Select>
+
+        <Select
           label="Sub Category"
-          defaultValue={product?.subcategory}
-        />
+          value={subcategory}
+          disabled={!category}
+          onChange={(e) => setSubcategory(e.target.value)}
+        >
+          <option value="">Select Sub Category</option>
+          {mainCategory &&
+            category &&
+            CATEGORY_MAP[mainCategory][category]?.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+        </Select>
       </div>
 
       {/* PRICING */}
@@ -320,44 +366,11 @@ function CreateProduct({ productId, onSuccess }) {
 
       {/* IMAGES */}
       <div className="grid md:grid-cols-2 gap-4">
-        <div>
-          <FileInput name="imageFront" label="Front Image" />
-          {product?.imageFrontFileId && (
-            <ImagePreview
-              fileId={product.imageFrontFileId}
-              onDelete={() =>
-                deleteImage(product._id, product.imageFrontFileId, "front")
-              }
-            />
-          )}
-        </div>
-
-        <div>
-          <FileInput name="imageBack" label="Back Image" />
-          {product?.imageBackFileId && (
-            <ImagePreview
-              fileId={product.imageBackFileId}
-              onDelete={() =>
-                deleteImage(product._id, product.imageBackFileId, "back")
-              }
-            />
-          )}
-        </div>
+        <FileInput name="imageFront" label="Front Image" />
+        <FileInput name="imageBack" label="Back Image" />
       </div>
 
-      <div>
-        <FileInput name="galleryImages" label="Gallery Images" multiple />
-        <div className="flex gap-2 mt-2 flex-wrap">
-          {product?.gallery?.map((g) => (
-            <ImagePreview
-              key={g.fileId}
-              fileId={g.fileId}
-              onDelete={() => deleteImage(product._id, g.fileId, "gallery")}
-              small
-            />
-          ))}
-        </div>
-      </div>
+      <FileInput name="galleryImages" label="Gallery Images" multiple />
 
       {/* FLAGS */}
       <div className="flex gap-6 text-sm">
@@ -390,39 +403,8 @@ function CreateProduct({ productId, onSuccess }) {
 }
 
 /* --------------------------------- */
-/* --------- UI HELPERS ------------ */
+/* -------- UI HELPERS -------------- */
 /* --------------------------------- */
-
-function ImagePreview({ fileId, onDelete, small }) {
-  return (
-    <div className="relative inline-block mt-2">
-      <img
-        src={`/api/images/${fileId}`}
-        className={`${small ? "h-20" : "h-24"} rounded border`}
-      />
-      <button
-        type="button"
-        onClick={onDelete}
-        className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-5 h-5 text-xs"
-      >
-        ✕
-      </button>
-    </div>
-  );
-}
-
-function Tab({ active, children, ...props }) {
-  return (
-    <button
-      {...props}
-      className={`px-4 py-2 rounded-t ${
-        active ? "bg-[#4a2e1f] text-white" : ""
-      }`}
-    >
-      {children}
-    </button>
-  );
-}
 
 function Input({ label, ...props }) {
   return (
@@ -457,11 +439,57 @@ function Select({ label, children, ...props }) {
   );
 }
 
-function FileInput({ label, ...props }) {
+function FileInput({ label, multiple = false, ...props }) {
+  const [previews, setPreviews] = useState([]);
+
+  function handleChange(e) {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    const urls = files.map((file) => ({
+      file,
+      url: URL.createObjectURL(file),
+    }));
+
+    setPreviews(urls);
+  }
+
   return (
-    <div>
-      <label className="text-sm">{label}</label>
-      <input type="file" {...props} />
+    <div className="space-y-2">
+      <label className="text-sm font-medium text-[#4a2e1f]">{label}</label>
+
+      {/* Upload Box */}
+      <label className="flex items-center justify-center gap-3 px-4 py-3 border-2 border-dashed border-[#ead7c5] rounded-lg cursor-pointer hover:bg-[#fdf7f2] transition">
+        <span className="text-sm text-gray-600">
+          Click to upload {multiple ? "images" : "image"}
+        </span>
+
+        <input
+          type="file"
+          {...props}
+          multiple={multiple}
+          onChange={handleChange}
+          className="hidden"
+        />
+      </label>
+
+      {/* PREVIEW */}
+      {previews.length > 0 && (
+        <div className="flex gap-3 flex-wrap mt-2">
+          {previews.map((p, i) => (
+            <div
+              key={i}
+              className="relative w-24 h-24 border rounded-lg overflow-hidden"
+            >
+              <img
+                src={p.url}
+                alt="preview"
+                className="w-full h-full object-cover"
+              />
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -472,5 +500,18 @@ function Checkbox({ label, ...props }) {
       <input type="checkbox" {...props} />
       {label}
     </label>
+  );
+}
+
+function Tab({ active, children, ...props }) {
+  return (
+    <button
+      {...props}
+      className={`px-4 py-2 rounded-t ${
+        active ? "bg-[#4a2e1f] text-white" : ""
+      }`}
+    >
+      {children}
+    </button>
   );
 }
