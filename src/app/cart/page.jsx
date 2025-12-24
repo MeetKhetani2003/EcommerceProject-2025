@@ -31,6 +31,10 @@ const PALETTE = {
 export default function CartPage() {
   const { cart, fetchCart, updateQty, removeFromCart } = useCartStore();
   const { user, getUser, setUser } = useUserStore();
+  // COUPON
+  const [couponCode, setCouponCode] = useState("");
+  const [couponData, setCouponData] = useState(null);
+  const [couponLoading, setCouponLoading] = useState(false);
 
   // UI state
   const [step, setStep] = useState(1); // 1: Bag, 2: Address, 3: Payment
@@ -73,13 +77,44 @@ export default function CartPage() {
     }
   }, [user]);
 
-  // totals
   const subtotal = useMemo(
     () => cart.reduce((acc, it) => acc + Number(it.price) * it.qty, 0),
     [cart]
   );
+
   const delivery = subtotal > 999 || subtotal === 0 ? 0 : 69;
-  const total = subtotal + delivery;
+  const discount = couponData?.discount || 0;
+  const total = Math.max(0, subtotal + delivery - discount);
+  const applyCoupon = async () => {
+    if (!couponCode) return toast.error("Enter coupon code");
+
+    try {
+      setCouponLoading(true);
+
+      const res = await fetch("/api/coupon/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code: couponCode,
+          cartTotal: subtotal,
+        }),
+      });
+
+      const data = await res.json();
+      setCouponLoading(false);
+
+      if (!res.ok) {
+        setCouponData(null);
+        return toast.error(data.message || "Invalid coupon");
+      }
+
+      setCouponData(data.coupon);
+      toast.success(`Coupon ${data.coupon.code} applied`);
+    } catch {
+      setCouponLoading(false);
+      toast.error("Failed to apply coupon");
+    }
+  };
 
   // Address save
   const saveAddress = async () => {
@@ -479,6 +514,55 @@ export default function CartPage() {
                   <span>{delivery === 0 ? "Free" : `₹${delivery}`}</span>
                 </div>
                 <hr className="my-3" />
+                {/* COUPON */}
+                <div className="mt-4">
+                  {couponData ? (
+                    <div className="flex justify-between items-center bg-green-50 p-3 rounded text-sm">
+                      <div>
+                        <div className="font-medium text-green-700">
+                          Coupon Applied: {couponData.code}
+                        </div>
+                        <div className="text-xs text-green-600">
+                          You saved ₹{couponData.discount}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setCouponData(null);
+                          setCouponCode("");
+                        }}
+                        className="text-red-500 text-xs"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <input
+                        value={couponCode}
+                        onChange={(e) =>
+                          setCouponCode(e.target.value.toUpperCase())
+                        }
+                        placeholder="Coupon code"
+                        className="flex-1 border rounded px-2 py-1 text-sm"
+                      />
+                      <button
+                        onClick={applyCoupon}
+                        disabled={couponLoading}
+                        className="px-3 py-1 rounded bg-[#654321] text-white text-sm"
+                      >
+                        {couponLoading ? "Applying..." : "Apply"}
+                      </button>
+                    </div>
+                  )}
+                </div>
+                {discount > 0 && (
+                  <div className="flex justify-between text-green-700">
+                    <span>Discount</span>
+                    <span>-₹{discount}</span>
+                  </div>
+                )}
+
                 <div className="flex justify-between font-bold text-lg">
                   <span>Total</span>
                   <span>₹{total}</span>

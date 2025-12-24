@@ -8,7 +8,7 @@ const menu = [
   { name: "Products", href: "/admin/products" },
   { name: "Users", href: "/admin/users" },
   { name: "Orders", href: "/admin/orders" },
-  { name: "Settings", href: "/admin/settings" },
+  { name: "Coupons", href: "/admin/coupons" },
 ];
 
 export default function AdminSidebar() {
