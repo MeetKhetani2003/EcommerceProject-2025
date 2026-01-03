@@ -512,7 +512,7 @@ const NavBar = () => {
         }`}
       >
         <div className={`${PALETTE.ACCENT_BG} text-white p-4`}>
-          {user ? (
+          {user?.firstName ? (
             <Link href="/profile" className="flex items-center z-40 gap-2">
               <User className="w-5 h-5" />
 
