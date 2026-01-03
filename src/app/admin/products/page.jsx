@@ -222,6 +222,11 @@ function ProductList({ onEdit }) {
 function CreateProduct({ productId, onSuccess }) {
   const isEdit = !!productId;
   const [product, setProduct] = useState(null);
+  const [existingImages, setExistingImages] = useState({
+    front: [],
+    back: [],
+    gallery: [],
+  });
 
   const [mainCategory, setMainCategory] = useState("");
   const [category, setCategory] = useState("");
@@ -241,10 +246,25 @@ function CreateProduct({ productId, onSuccess }) {
       .then((r) => r.json())
       .then((d) => {
         const p = d.product;
+
         setProduct(p);
         setMainCategory(p.mainCategory || "");
         setCategory(p.category || "");
         setSubcategory(p.subcategory || "");
+
+        // ✅ THIS IS WHERE IT GOES
+        setExistingImages({
+          front: p.imageFrontFileId
+            ? [{ url: `/api/images/${p.imageFrontFileId}` }]
+            : [],
+          back: p.imageBackFileId
+            ? [{ url: `/api/images/${p.imageBackFileId}` }]
+            : [],
+          gallery:
+            p.gallery?.map((g) => ({
+              url: `/api/images/${g.fileId}`,
+            })) || [],
+        });
 
         const allowedSizes = SIZE_MAP[p.mainCategory] || [];
         setSizes(
@@ -261,6 +281,8 @@ function CreateProduct({ productId, onSuccess }) {
         });
       });
   }, [productId]);
+
+  console.log(product);
 
   useEffect(() => {
     if (!mainCategory) {
@@ -447,10 +469,13 @@ function CreateProduct({ productId, onSuccess }) {
         <FileInput
           name="imageFront"
           label={<FieldLabel required>Front Image</FieldLabel>}
+          initialImages={existingImages.front}
         />
+
         <FileInput
           name="imageBack"
           label={<FieldLabel optional>Back Image</FieldLabel>}
+          initialImages={existingImages.back}
         />
       </div>
 
@@ -458,6 +483,7 @@ function CreateProduct({ productId, onSuccess }) {
         name="galleryImages"
         label={<FieldLabel optional>Gallery Images</FieldLabel>}
         multiple
+        initialImages={existingImages.gallery}
       />
 
       <div className="flex gap-6 text-sm">
@@ -536,11 +562,90 @@ function Select({ label, children, ...props }) {
   );
 }
 
-function FileInput({ label, ...props }) {
+function FileInput({
+  label,
+  name,
+  multiple = false,
+  initialImages = [], // 👈 NEW
+}) {
+  const [previews, setPreviews] = useState([]);
+
+  // 🔹 Load existing images (edit mode)
+  useEffect(() => {
+    if (initialImages.length) {
+      setPreviews(
+        initialImages.map((img) => ({
+          url: img.url,
+          existing: true, // mark as existing image
+        }))
+      );
+    }
+  }, [initialImages]);
+
+  function handleChange(e) {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    const newImgs = files.map((file) => ({
+      file,
+      url: URL.createObjectURL(file),
+      existing: false,
+    }));
+
+    setPreviews((prev) => (multiple ? [...prev, ...newImgs] : newImgs));
+  }
+
+  function removeImage(index) {
+    setPreviews((prev) => prev.filter((_, i) => i !== index));
+  }
+
   return (
-    <div>
-      <label className="text-sm">{label}</label>
-      <input type="file" {...props} />
+    <div className="space-y-2">
+      <label className="text-sm font-medium">{label}</label>
+
+      <div className="relative border-2 border-dashed border-[#ead7c5] rounded-lg p-4 text-center hover:bg-[#fdf7f2] transition">
+        <input
+          type="file"
+          name={name}
+          multiple={multiple}
+          onChange={handleChange}
+          className="absolute inset-0 opacity-0 cursor-pointer"
+        />
+        <p className="text-sm text-gray-500">
+          Click to upload {multiple ? "images" : "image"}
+        </p>
+      </div>
+
+      {previews.length > 0 && (
+        <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
+          {previews.map((img, i) => (
+            <div
+              key={i}
+              className="relative group border rounded overflow-hidden"
+            >
+              <img
+                src={img.url}
+                alt="preview"
+                className="h-28 w-full object-cover"
+              />
+
+              <button
+                type="button"
+                onClick={() => removeImage(i)}
+                className="absolute top-1 right-1 bg-black/70 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100"
+              >
+                ✕
+              </button>
+
+              {img.existing && (
+                <span className="absolute bottom-1 left-1 bg-black/70 text-white text-[10px] px-2 py-0.5 rounded">
+                  Existing
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
