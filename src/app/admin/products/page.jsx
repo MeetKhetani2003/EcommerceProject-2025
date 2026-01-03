@@ -132,12 +132,40 @@ export default function AdminProducts() {
 
 function ProductList({ onEdit }) {
   const [products, setProducts] = useState([]);
+  const [loadingId, setLoadingId] = useState(null);
+
+  async function fetchProducts() {
+    const res = await fetch("/api/products");
+    const data = await res.json();
+    setProducts(data.products || []);
+  }
 
   useEffect(() => {
-    fetch("/api/products")
-      .then((r) => r.json())
-      .then((d) => setProducts(d.products || []));
+    fetchProducts();
   }, []);
+
+  async function handleDelete(productId) {
+    if (!confirm("Are you sure you want to delete this product?")) return;
+
+    try {
+      setLoadingId(productId);
+
+      const res = await fetch(`/api/products?id=${productId}`, {
+        method: "DELETE",
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.message || "Delete failed");
+
+      toast.success("Product deleted successfully");
+      fetchProducts(); // refresh list
+    } catch (err) {
+      toast.error(err.message || "Failed to delete product");
+    } finally {
+      setLoadingId(null);
+    }
+  }
 
   return (
     <div className="bg-white border border-[#ead7c5] rounded-xl overflow-hidden">
@@ -153,7 +181,7 @@ function ProductList({ onEdit }) {
       {products.map((p) => (
         <div
           key={p._id}
-          className="grid grid-cols-6 gap-4 px-4 py-3 border-t text-sm"
+          className="grid grid-cols-6 gap-4 px-4 py-3 border-t text-sm items-center"
         >
           <div className="font-medium">{p.name}</div>
           <div>{p.category}</div>
@@ -164,9 +192,21 @@ function ProductList({ onEdit }) {
             {p.isBestseller && "Best "}
             {p.featured && "Featured"}
           </div>
-          <div className="text-right">
-            <button onClick={() => onEdit(p._id)} className="underline">
+
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => onEdit(p._id)}
+              className="text-blue-600 underline"
+            >
               Edit
+            </button>
+
+            <button
+              onClick={() => handleDelete(p._id)}
+              disabled={loadingId === p._id}
+              className="text-red-600 underline disabled:opacity-50"
+            >
+              {loadingId === p._id ? "Deleting..." : "Delete"}
             </button>
           </div>
         </div>
