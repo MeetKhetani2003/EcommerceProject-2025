@@ -23,3 +23,8 @@ export const removeCacheItem = (id) => {
     (p) => p._id.toString() !== id.toString()
   );
 };
+
+export const clearCache = () => {
+  cache.products = [];
+  cache.lastSync = null;
+};
