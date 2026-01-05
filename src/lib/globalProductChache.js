@@ -17,5 +17,7 @@ export const updateCacheItem = (item) => {
 };
 
 export const removeCacheItem = (id) => {
-  cache.products = cache.products.filter((p) => p._id !== id);
+  cache.products = cache.products.filter(
+    (p) => p._id.toString() !== id.toString()
+  );
 };

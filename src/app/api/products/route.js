@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import { connectDb } from "@/lib/dbConnect";
 import Products from "@/models/Products";
 import { uploadToGridFs, deleteFromGridFs } from "@/lib/gridFsClient";
-import { getCache, setCache } from "@/lib/globalProductChache";
+import { getCache, setCache, removeCacheItem } from "@/lib/globalProductChache";
 
 export const dynamic = "force-dynamic";
 /**
@@ -180,12 +180,8 @@ export async function DELETE(req) {
   await Products.deleteOne({ _id: id });
   await Promise.all(fileIds.map((fid) => deleteFromGridFs(fid.toString())));
 
-  // ✅ CACHE UPDATE (same style as POST & PUT)
-  const cache = getCache();
-  const index = cache.products.findIndex((p) => p._id.toString() === id);
-  if (index !== -1) {
-    cache.products.splice(index, 1);
-  }
+  // ✅ USE CACHE HELPER
+  removeCacheItem(id);
 
   return NextResponse.json({ success: true });
 }
