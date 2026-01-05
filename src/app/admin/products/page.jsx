@@ -227,6 +227,7 @@ function CreateProduct({ productId, onSuccess }) {
     back: [],
     gallery: [],
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [mainCategory, setMainCategory] = useState("");
   const [category, setCategory] = useState("");
@@ -294,47 +295,60 @@ function CreateProduct({ productId, onSuccess }) {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    const f = e.target;
-    const fd = new FormData();
 
-    if (f.imageFront?.files[0]) fd.append("imageFront", f.imageFront.files[0]);
-    if (f.imageBack?.files[0]) fd.append("imageBack", f.imageBack.files[0]);
+    // 🚫 prevent spam clicks
+    if (isSubmitting) return;
 
-    if (f.galleryImages?.files?.length) {
-      [...f.galleryImages.files].forEach((img) =>
-        fd.append("galleryImages", img)
-      );
+    setIsSubmitting(true);
+
+    try {
+      const f = e.target;
+      const fd = new FormData();
+
+      if (f.imageFront?.files[0])
+        fd.append("imageFront", f.imageFront.files[0]);
+      if (f.imageBack?.files[0]) fd.append("imageBack", f.imageBack.files[0]);
+
+      if (f.galleryImages?.files?.length) {
+        [...f.galleryImages.files].forEach((img) =>
+          fd.append("galleryImages", img)
+        );
+      }
+
+      const productData = {
+        name: f.name.value,
+        brand: f.brand.value,
+        mainCategory,
+        category,
+        subcategory,
+        price: {
+          current: Number(f.priceCurrent.value),
+          old: Number(f.priceOld.value),
+          discountText: f.discountText.value,
+        },
+        sizes: sizes.filter((s) => s.quantity > 0),
+        salesCount: Number(f.salesCount.value),
+        description: f.description.value,
+        ...flags,
+      };
+
+      fd.append("productData", JSON.stringify(productData));
+      if (isEdit) fd.append("productId", productId);
+
+      const res = await fetch("/api/products", {
+        method: isEdit ? "PUT" : "POST",
+        body: fd,
+      });
+
+      if (!res.ok) throw new Error("Failed to save product");
+
+      toast.success(isEdit ? "Product Updated" : "Product Created");
+      onSuccess();
+    } catch (err) {
+      toast.error(err.message || "Something went wrong");
+    } finally {
+      setIsSubmitting(false);
     }
-
-    const productData = {
-      name: f.name.value,
-      brand: f.brand.value,
-      mainCategory,
-      category,
-      subcategory,
-      price: {
-        current: Number(f.priceCurrent.value),
-        old: Number(f.priceOld.value),
-        discountText: f.discountText.value,
-      },
-      sizes: sizes.filter((s) => s.quantity > 0),
-      salesCount: Number(f.salesCount.value),
-      description: f.description.value,
-      ...flags,
-    };
-
-    fd.append("productData", JSON.stringify(productData));
-    if (isEdit) fd.append("productId", productId);
-
-    const res = await fetch("/api/products", {
-      method: isEdit ? "PUT" : "POST",
-      body: fd,
-    });
-
-    if (!res.ok) return toast.error("Failed to save product");
-
-    toast.success(isEdit ? "Product Updated" : "Product Created");
-    onSuccess();
   }
 
   return (
@@ -508,8 +522,22 @@ function CreateProduct({ productId, onSuccess }) {
         />
       </div>
 
-      <button className="bg-[#4a2e1f] text-white px-6 py-2 rounded">
-        {isEdit ? "Update Product" : "Create Product"}
+      <button
+        type="submit"
+        disabled={isSubmitting}
+        className={`px-6 py-2 rounded text-white transition ${
+          isSubmitting
+            ? "bg-gray-400 cursor-not-allowed"
+            : "bg-[#4a2e1f] hover:opacity-90"
+        }`}
+      >
+        {isSubmitting
+          ? isEdit
+            ? "Updating..."
+            : "Creating..."
+          : isEdit
+          ? "Update Product"
+          : "Create Product"}
       </button>
     </form>
   );
