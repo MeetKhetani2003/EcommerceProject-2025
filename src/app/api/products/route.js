@@ -186,7 +186,10 @@ export async function DELETE(req) {
   await Promise.all(fileIds.map((fid) => deleteFromGridFs(fid.toString())));
 
   // ✅ USE CACHE HELPER
-  clearCache();
+  await clearCache();
+  console.log("chache cleared", getCache());
+  const data = getCache();
+  console.log(data);
 
   return NextResponse.json({ success: true });
 }
