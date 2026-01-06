@@ -22,12 +22,14 @@ const tabs = [
 ];
 
 export default function FilterTabs() {
-  const { filterProducts } = useProductsStore();
+  const { setFilter, fetchProducts } = useProductsStore();
+
   const [activeTab, setActiveTab] = useState("All");
 
   const handleClick = (tab) => {
     setActiveTab(tab);
-    filterProducts(tab);
+    setFilter(tab);
+    fetchProducts(); // 🔥 immediately fetch first page
   };
 
   return (
