@@ -5,6 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { generateInvoice } from "@/utils/generateInvoice";
+import { useCartStore } from "@/store/useCartStore";
+import { useAppStore } from "@/store/useAppStore";
 
 const PALETTE = {
   BG: "bg-[#fdf7f2]",
@@ -332,7 +334,16 @@ export default function ProfilePage() {
           </section>
           <button
             onClick={async () => {
-              await fetch("/api/user/auth/logout", { method: "POST" });
+              await fetch("/api/user/auth/logout", {
+                method: "POST",
+                credentials: "include",
+                cache: "no-store",
+              });
+
+              // 🔥 clear client-side state
+              useCartStore.getState().cart = [];
+              useAppStore.getState().wishlist = [];
+
               window.location.href = "/";
             }}
             className="text-sm text-red-600 underline mt-4"

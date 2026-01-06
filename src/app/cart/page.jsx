@@ -371,13 +371,17 @@ export default function CartPage() {
                 <div className="space-y-3">
                   {cart.map((item) => (
                     <div
-                      key={`${item.productId}-${item.size}`}
+                      key={`${item._id}-${item.selectedSize}`}
                       className="flex items-center gap-4 p-3 rounded-md border"
                     >
                       <div className="w-28 h-28 relative overflow-hidden rounded-md bg-[#f4efe8]">
                         {/* product image may be a url or api route */}
                         <Image
-                          src={item.image}
+                          src={
+                            item.imageFront?.startsWith("/api")
+                              ? item.imageFront
+                              : `/api/images/${item.imageFront}`
+                          }
                           alt={item.name}
                           width={112}
                           height={112}
@@ -389,15 +393,18 @@ export default function CartPage() {
                         <div className="flex items-start justify-between">
                           <div>
                             <p className="font-semibold text-sm">{item.name}</p>
-                            <p className="text-xs text-gray-600">
-                              Size: {item.size}
-                            </p>
+                            {item.selectedSize !== "General" && (
+                              <p className="text-xs text-gray-600">
+                                Size: {item.selectedSize}
+                              </p>
+                            )}
+
                             <p className="mt-2 font-bold">₹{item.price}</p>
                           </div>
 
                           <button
                             onClick={() =>
-                              removeFromCart(item.productId, item.size)
+                              removeFromCart(item._id, item.selectedSize)
                             }
                             className="text-red-500"
                             aria-label="Remove"
@@ -410,8 +417,8 @@ export default function CartPage() {
                           <button
                             onClick={() =>
                               updateQty(
-                                item.productId,
-                                item.size,
+                                item._id,
+                                item.selectedSize,
                                 Math.max(1, item.qty - 1)
                               )
                             }
@@ -422,7 +429,11 @@ export default function CartPage() {
                           <div className="px-3">{item.qty}</div>
                           <button
                             onClick={() =>
-                              updateQty(item.productId, item.size, item.qty + 1)
+                              updateQty(
+                                item._id,
+                                item.selectedSize,
+                                item.qty + 1
+                              )
                             }
                             className="px-2 py-1 border rounded"
                           >

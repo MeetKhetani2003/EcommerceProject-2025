@@ -23,7 +23,6 @@ const PALETTE = {
 };
 
 export default function ProductDetailsClient({ product }) {
-  // ------- Image Fix -------
   const imgFront = product?.imageFront || null;
   const imgBack = product?.imageBack || null;
   const [buyNowOpen, setBuyNowOpen] = useState(false);
@@ -33,23 +32,17 @@ export default function ProductDetailsClient({ product }) {
     return [imgFront, imgBack, ...extra].filter(Boolean);
   }, [product]);
 
-  // Recommendation
+  // Recommended
   const [recommended, setRecommended] = useState([]);
-
   useEffect(() => {
-    async function loadRecs() {
-      const res = await fetch(
-        `/api/products/recommendations?id=${product._id}`
-      );
-      const data = await res.json();
-      setRecommended(data.recommendations || []);
-    }
-    loadRecs();
+    fetch(`/api/products/recommendations?id=${product._id}`)
+      .then((r) => r.json())
+      .then((d) => setRecommended(d.recommendations || []));
   }, [product._id]);
 
   // Wishlist
   const { wishlist, addToWishlist, removeFromWishlist } = useAppStore();
-  const isWishlisted = wishlist.some((item) => item._id === product._id);
+  const isWishlisted = wishlist.some((i) => i._id === product._id);
 
   const toggleWishlist = () => {
     isWishlisted ? removeFromWishlist(product._id) : addToWishlist(product);
@@ -59,64 +52,70 @@ export default function ProductDetailsClient({ product }) {
   const addToCart = useCartStore((s) => s.addToCart);
   const [selectedSize, setSelectedSize] = useState(null);
   const [added, setAdded] = useState(false);
-  const [cartOpen, setCartOpen] = useState(false);
+
+  const isAccessory = product.mainCategory === "accessories"; // ✅ NEW
 
   const handleAddToCart = () => {
-    if (!selectedSize) return toast.error("Select a size first 👕");
+    // ACCESSORIES → no size required
+    if (product.mainCategory === "accessories") {
+      addToCart({
+        _id: product._id,
+        mainCategory: "accessories",
+      });
+
+      setAdded(true);
+      toast.success("Added to cart 🛒");
+      return;
+    }
+
+    // CLOTHES / SHOES → size required
+    if (!selectedSize) {
+      toast.error("Select a size first 👕");
+      return;
+    }
 
     addToCart({
       _id: product._id,
-      name: product.name,
       selectedSize,
-      price: product.price.current,
-      imageFront: imgFront,
-      availableSizes: product.availableSizes,
+      mainCategory: product.mainCategory,
     });
 
     setAdded(true);
-    toast.success(`Added to Cart 🛍 (${selectedSize})`);
+    toast.success(`Added to cart 🛍 (${selectedSize})`);
   };
 
   return (
-    <div
-      className={`max-w-[1400px] mx-auto px-4 py-10 ${PALETTE.BACKGROUND} overflow-x-hidden`}
-    >
-      {/* 🧭 Breadcrumb */}
+    <div className={`max-w-[1400px] mx-auto px-4 py-10 ${PALETTE.BACKGROUND}`}>
+      {/* Breadcrumb */}
       <p className={`text-xs opacity-60 mb-4 ${PALETTE.TEXT}`}>
-        Home / {product.category} /{" "}
-        <span className="opacity-90">{product.name}</span>
+        Home / {product.category} / <span>{product.name}</span>
       </p>
 
       <div className="grid lg:grid-cols-[2fr_1fr] gap-10">
-        {/* 🖼 DESKTOP IMAGES */}
+        {/* Images */}
         <div className="hidden lg:grid grid-cols-2 gap-6">
           {gallery.map((img, i) => (
             <div
               key={i}
-              className="relative w-full h-[650px] rounded-lg overflow-hidden bg-[#ebdfd6]"
+              className="relative h-[650px] rounded-lg overflow-hidden"
             >
               <Image
                 src={img}
                 fill
                 alt={product.name}
-                className="object-cover hover:scale-105 duration-500"
+                className="object-cover"
               />
             </div>
           ))}
         </div>
 
-        {/* 📱 MOBILE + TABLET SWIPER */}
-        <div className="lg:hidden w-full max-w-full overflow-hidden">
+        {/* Mobile Swiper */}
+        <div className="lg:hidden">
           <Swiper>
             {gallery.map((img, i) => (
               <SwiperSlide key={i}>
-                <div className="relative w-full h-[420px] sm:h-[480px] rounded-xl overflow-hidden bg-[#ead9c9]">
-                  <Image
-                    src={img}
-                    fill
-                    alt={product.name}
-                    className="object-cover"
-                  />
+                <div className="relative h-[420px]">
+                  <Image src={img} fill alt={product.name} />
                 </div>
               </SwiperSlide>
             ))}
@@ -124,117 +123,127 @@ export default function ProductDetailsClient({ product }) {
         </div>
 
         {/* RIGHT PANEL */}
-        <div className="lg:sticky lg:top-10 space-y-6 overflow-x-hidden">
+        <div className="space-y-6 lg:sticky lg:top-10">
           <h1 className={`text-3xl font-semibold ${PALETTE.TEXT}`}>
             {product.name}
           </h1>
 
+          {/* ✅ LABELS */}
+          <div className="flex gap-2 flex-wrap">
+            {product.isNewArrival && (
+              <span className="px-3 py-1 text-xs rounded-full bg-green-100 text-green-700">
+                New Arrival
+              </span>
+            )}
+            {product.isBestseller && (
+              <span className="px-3 py-1 text-xs rounded-full bg-yellow-100 text-yellow-700">
+                Best Seller
+              </span>
+            )}
+            {product.featured && (
+              <span className="px-3 py-1 text-xs rounded-full bg-red-100 text-red-700">
+                Featured
+              </span>
+            )}
+          </div>
+
           {/* Wishlist */}
           <button
             onClick={toggleWishlist}
-            className={`p-2 border rounded-md transition ${PALETTE.BORDER} ${PALETTE.TEXT} hover:bg-[#deb887]`}
+            className={`p-2 border rounded ${PALETTE.BORDER}`}
           >
             <Heart
-              className={`${isWishlisted ? "fill-red-500 text-red-500" : ""}`}
+              className={isWishlisted ? "fill-red-500 text-red-500" : ""}
             />
           </button>
 
-          {/* PRICE */}
+          {/* Price */}
           <div className={`border-y py-4 ${PALETTE.BORDER}`}>
             <p className={`text-3xl font-bold ${PALETTE.TEXT}`}>
-              ₹{product.price?.current}
+              ₹{product.price.current}
             </p>
           </div>
 
-          {/* Size */}
-          <div>
-            <p className={`text-xs uppercase mb-2 ${PALETTE.TEXT}`}>
-              Select Size
-            </p>
-            <div className="flex gap-2 flex-wrap">
-              {product.availableSizes?.map((s) => (
-                <button
-                  key={s}
-                  onClick={() => setSelectedSize(s)}
-                  className={`px-5 py-2 rounded-md text-sm border transition ${
-                    selectedSize === s
-                      ? `${PALETTE.ACCENT} text-white`
-                      : `${PALETTE.BORDER} ${PALETTE.TEXT} hover:bg-[#deb887]`
-                  }`}
-                >
-                  {s}
-                </button>
-              ))}
+          {/* ✅ SIZE (hidden for accessories) */}
+          {!isAccessory && (
+            <div>
+              <p className="text-xs uppercase mb-2">Select Size</p>
+              <div className="flex gap-2 flex-wrap">
+                {product.sizes?.map((s) => (
+                  <button
+                    key={s.size}
+                    onClick={() => setSelectedSize(s.size)}
+                    className={`px-4 py-2 border rounded ${
+                      selectedSize === s.size ? "bg-[#654321] text-white" : ""
+                    }`}
+                  >
+                    {s.size}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Add to Cart */}
           {!added ? (
             <button
               onClick={handleAddToCart}
-              className={`${PALETTE.ACCENT} ${PALETTE.HOVER} w-full py-3 rounded-md text-white flex items-center justify-center gap-2`}
+              className={`${PALETTE.ACCENT} w-full py-3 text-white rounded`}
             >
-              <ShoppingBag className="w-5 h-5" /> Add To Bag
+              <ShoppingBag className="inline w-5 h-5 mr-2" />
+              Add To Bag
             </button>
           ) : (
             <button
               onClick={() => redirect("/cart")}
-              className={`w-full py-3 border ${PALETTE.BORDER} rounded-md flex items-center justify-center gap-2 font-semibold ${PALETTE.TEXT} hover:bg-[#deb88740]`}
+              className="w-full py-3 border rounded"
             >
-              <CheckCircle2 className="w-5 h-5" /> Go To Cart
+              <CheckCircle2 className="inline w-5 h-5 mr-2" />
+              Go To Cart
             </button>
           )}
+
+          {/* Buy Now */}
           <button
-            onClick={() => {
-              if (!selectedSize) {
-                toast.error("Select a size first 👕");
-                return;
-              }
-              setBuyNowOpen(true);
-            }}
-            className="w-full py-3 rounded-md border border-[#654321] text-[#654321] hover:bg-[#deb88740]"
+            onClick={() => setBuyNowOpen(true)}
+            className="w-full py-3 border rounded"
           >
             Buy Now
           </button>
 
           {/* Description */}
           <div>
-            <h3 className={`text-lg font-semibold mt-4 ${PALETTE.TEXT}`}>
-              Description
-            </h3>
+            <h3 className="font-semibold mt-4">Description</h3>
             <p className="text-sm text-gray-600">{product.description}</p>
           </div>
         </div>
       </div>
 
-      {cartOpen && <CartModal close={() => setCartOpen(false)} />}
+      {/* Recommended */}
+      {recommended.length > 0 && (
+        <div className="mt-16">
+          <h2 className="text-2xl font-semibold mb-4">You may also like</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+            {recommended.map((p) => (
+              <ProductCard key={p._id} product={p} />
+            ))}
+          </div>
+        </div>
+      )}
+
       {buyNowOpen && (
         <BuyNowCheckoutModal
           onClose={() => setBuyNowOpen(false)}
           item={{
             productId: product._id,
             name: product.name,
-            size: selectedSize,
+            size:
+              product.mainCategory === "accessories" ? "General" : selectedSize,
             price: product.price.current,
             image: imgFront,
             qty: 1,
           }}
         />
-      )}
-
-      {/* ================= Recommended ================= */}
-      {recommended.length > 0 && (
-        <div className="mt-16">
-          <h2 className={`text-2xl font-semibold mb-4 ${PALETTE.TEXT}`}>
-            You may also like
-          </h2>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-            {recommended.map((prod, idx) => (
-              <ProductCard product={prod} key={idx} />
-            ))}
-          </div>
-        </div>
       )}
     </div>
   );

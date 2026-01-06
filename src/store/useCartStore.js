@@ -1,59 +1,51 @@
-"use client";
 import toast from "react-hot-toast";
 import { create } from "zustand";
 
 export const useCartStore = create((set, get) => ({
   cart: [],
 
-  // 🔥 BUY NOW STATE
-  buyNowItem: null,
-
-  setBuyNowItem: (item) => set({ buyNowItem: item }),
-  clearBuyNowItem: () => set({ buyNowItem: null }),
-
   fetchCart: async () => {
-    const res = await fetch("/api/user/cart", { credentials: "include" });
+    const res = await fetch("/api/user/cart", {
+      credentials: "include",
+    });
+
     const data = await res.json();
-    set({ cart: data });
+
+    // ✅ NORMALIZE SHAPE
+    const normalized = data.map((item) => ({
+      _id: item.productId,
+      name: item.name,
+      price: item.price,
+      imageFront: item.image,
+      selectedSize: item.size || "General",
+      qty: item.qty,
+    }));
+
+    set({ cart: normalized });
   },
 
   addToCart: async (product) => {
-    if (product?.size) product.selectedSize = product.size;
+    const size =
+      product.selectedSize ||
+      product.size ||
+      (product.mainCategory === "accessories" ? "General" : null);
 
-    if (!product?._id || !product?.selectedSize) {
-      return;
-    }
+    if (!product._id || !size) return;
 
-    try {
-      const res = await fetch("/api/user/cart", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          productId: product._id,
-          size: product.selectedSize,
-        }),
-      });
+    const res = await fetch("/api/user/cart", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        productId: product._id,
+        size,
+      }),
+    });
 
-      const data = await res.json();
+    const data = await res.json();
+    if (!data.success) return;
 
-      if (res.status === 401) {
-        toast.error("Login Required 🔐");
-        window.location.href = "/auth";
-        return;
-      }
-
-      if (!data.success) {
-        toast.error(data.message || "Something went wrong 😵");
-        return;
-      }
-
-      toast.success(`Added to cart 🛍️ (Size: ${product.selectedSize})`);
-      await get().fetchCart();
-    } catch (error) {
-      toast.error("Server error 💀 Try again.");
-      console.error(error);
-    }
+    await get().fetchCart();
   },
 
   updateQty: async (productId, size, qty) => {
@@ -76,5 +68,5 @@ export const useCartStore = create((set, get) => ({
     await get().fetchCart();
   },
 
-  cartCount: () => get().cart.reduce((t, item) => t + item.qty, 0),
+  cartCount: () => get().cart.reduce((total, item) => total + item.qty, 0),
 }));

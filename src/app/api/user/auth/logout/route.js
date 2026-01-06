@@ -1,16 +1,19 @@
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 export async function POST() {
-  const cookieStore = cookies();
+  const response = NextResponse.json(
+    { success: true },
+    { headers: { "Cache-Control": "no-store" } }
+  );
 
-  cookieStore.set("auth", "", {
+  // 🔥 MUST MATCH login cookie options EXACTLY
+  response.cookies.set("auth", "", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    expires: new Date(0), // 👈 clears cookie
-    path: "/",
+    sameSite: "strict", // SAME AS LOGIN
+    path: "/", // SAME AS LOGIN
+    expires: new Date(0),
   });
 
-  return NextResponse.json({ success: true });
+  return response;
 }
