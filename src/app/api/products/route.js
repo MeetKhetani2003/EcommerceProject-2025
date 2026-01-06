@@ -105,6 +105,7 @@ export async function GET(req) {
   const categorySlug = searchParams.get("category");
   const subcategorySlug = searchParams.get("subcategory");
   const size = searchParams.get("size");
+  const featured = searchParams.get("featured");
 
   let result = [...cache.products];
 
@@ -127,7 +128,9 @@ export async function GET(req) {
       p.sizes?.some((s) => s.size === size && s.quantity > 0)
     );
   }
-
+  if (featured === "true") {
+    result = result.filter((p) => p.featured === true);
+  }
   return NextResponse.json({
     products: result,
     hasMore: false,

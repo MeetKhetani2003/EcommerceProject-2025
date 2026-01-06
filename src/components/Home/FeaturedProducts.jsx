@@ -42,7 +42,7 @@ export default function FeaturedProducts() {
       const data = await res.json();
 
       if (data?.products?.length > 0) {
-        setProducts(data.products);
+        setProducts(data.products.filter((p) => p.featured));
       } else {
         setProducts(dummyProducts);
       }
