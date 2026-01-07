@@ -11,8 +11,9 @@ import { useAppStore } from "@/store/useAppStore";
 import { useCartStore } from "@/store/useCartStore";
 import CartModal from "../Layouts/CartModal";
 import ProductCard from "../Layouts/ProductCard";
-import { redirect } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import BuyNowCheckoutModal from "../Layouts/BuyNowCheckoutModal";
+import { useUserStore } from "@/store/useUserStore";
 
 const PALETTE = {
   BACKGROUND: "bg-[#fff9f4]",
@@ -26,12 +27,20 @@ export default function ProductDetailsClient({ product }) {
   const imgFront = product?.imageFront || null;
   const imgBack = product?.imageBack || null;
   const [buyNowOpen, setBuyNowOpen] = useState(false);
+  const router = useRouter();
 
   const gallery = useMemo(() => {
     const extra = product?.gallery?.map((g) => `/api/images/${g.fileId}`) || [];
     return [imgFront, imgBack, ...extra].filter(Boolean);
   }, [product]);
+  const { user } = useUserStore();
 
+  const isLoggedIn = user?._id ? true : false;
+
+  const requireLogin = () => {
+    toast.error("Login first to continue 🔐");
+    router.push("/auth");
+  };
   // Recommended
   const [recommended, setRecommended] = useState([]);
   useEffect(() => {
@@ -45,6 +54,8 @@ export default function ProductDetailsClient({ product }) {
   const isWishlisted = wishlist.some((i) => i._id === product._id);
 
   const toggleWishlist = () => {
+    if (!isLoggedIn) return requireLogin();
+
     isWishlisted ? removeFromWishlist(product._id) : addToWishlist(product);
   };
 
@@ -56,6 +67,8 @@ export default function ProductDetailsClient({ product }) {
   const isAccessory = product.mainCategory === "accessories"; // ✅ NEW
 
   const handleAddToCart = () => {
+    if (!isLoggedIn) return requireLogin();
+
     // ACCESSORIES → no size required
     if (product.mainCategory === "accessories") {
       addToCart({
@@ -172,7 +185,11 @@ export default function ProductDetailsClient({ product }) {
                 {product.sizes?.map((s) => (
                   <button
                     key={s.size}
-                    onClick={() => setSelectedSize(s.size)}
+                    onClick={() =>
+                      setSelectedSize((prev) =>
+                        prev === s.size ? null : s.size
+                      )
+                    }
                     className={`px-4 py-2 border rounded ${
                       selectedSize === s.size ? "bg-[#654321] text-white" : ""
                     }`}
@@ -205,7 +222,16 @@ export default function ProductDetailsClient({ product }) {
 
           {/* Buy Now */}
           <button
-            onClick={() => setBuyNowOpen(true)}
+            onClick={() => {
+              if (!isLoggedIn) return requireLogin();
+
+              if (product.mainCategory !== "accessories" && !selectedSize) {
+                toast.error("Select a size first 👕");
+                return;
+              }
+
+              setBuyNowOpen(true);
+            }}
             className="w-full py-3 border rounded"
           >
             Buy Now
