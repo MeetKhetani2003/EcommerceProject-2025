@@ -7,6 +7,7 @@ import toast from "react-hot-toast";
 import { generateInvoice } from "@/utils/generateInvoice";
 import { useCartStore } from "@/store/useCartStore";
 import { useAppStore } from "@/store/useAppStore";
+import WishlistCard from "@/components/Layouts/WhishListCard";
 
 const PALETTE = {
   BG: "bg-[#fdf7f2]",
@@ -312,23 +313,7 @@ export default function ProfilePage() {
 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {user.wishlist.map((item) => (
-                <Link
-                  key={item._id}
-                  href={`/products/${item._id}`}
-                  className="group"
-                >
-                  <div className="relative aspect-[3/4] bg-gray-100 rounded-lg overflow-hidden">
-                    <Image
-                      src={`/api/files/${item.imageFrontFileId}`}
-                      alt={item.name}
-                      fill
-                      className="object-cover group-hover:scale-105 transition"
-                    />
-                  </div>
-                  <p className="mt-2 text-sm font-medium line-clamp-2">
-                    {item.name}
-                  </p>
-                </Link>
+                <WishlistCard key={item._id} item={item} showActions={false} />
               ))}
             </div>
           </section>

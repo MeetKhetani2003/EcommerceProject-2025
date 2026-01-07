@@ -8,6 +8,7 @@ import { useAppStore } from "@/store/useAppStore";
 import toast from "react-hot-toast";
 import SizeSelectModalWhishlist from "@/components/Layouts/SelectSizeModalWhishlist";
 import { useCartStore } from "@/store/useCartStore";
+import WishlistCard from "@/components/Layouts/WhishListCard";
 
 const PALETTE = {
   BG: "bg-[#fff9f4]",
@@ -54,74 +55,7 @@ export default function WishlistPage() {
         {wishlist.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
             {wishlist.map((item) => (
-              <div
-                key={item._id}
-                className={`${PALETTE.CARD} rounded-lg shadow-sm hover:shadow-md transition overflow-hidden`}
-              >
-                {/* Image */}
-                <Link href={`/products/${item._id}`}>
-                  <div className="relative w-full h-[260px] bg-[#f2e8dc]">
-                    {item.imageFront ? (
-                      <Image
-                        src={item.imageFront}
-                        alt={item.name}
-                        fill
-                        className="object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-sm text-gray-500">
-                        No Image
-                      </div>
-                    )}
-                  </div>
-                </Link>
-
-                {/* Info */}
-                <div className="p-3">
-                  <p
-                    className={`text-sm font-semibold ${PALETTE.TEXT} line-clamp-1`}
-                  >
-                    {item.name}
-                  </p>
-
-                  <p className="mt-1 font-bold text-[#654321]">
-                    ₹{item.price?.current}
-                  </p>
-
-                  {/* Actions */}
-                  <div className="mt-3 flex items-center justify-between">
-                    <button
-                      onClick={() => {
-                        if (item.availableSizes?.length > 1) {
-                          setSelectedProduct(item);
-                          setSizeModalOpen(true);
-                        } else {
-                          addToCart({
-                            ...item,
-                            selectedSize: item.availableSizes?.[0],
-                          });
-                          toast.success("Added to cart 🛒");
-                        }
-                      }}
-                      className="flex items-center gap-1 px-3 py-1.5 text-xs rounded-full bg-[#654321] text-white hover:bg-[#8c6239]"
-                    >
-                      <ShoppingCart size={14} />
-                      Cart
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        removeFromWishlist(item._id);
-                        toast.success("Removed from wishlist");
-                      }}
-                      className="text-red-500 hover:scale-110 transition"
-                      aria-label="Remove"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
-                </div>
-              </div>
+              <WishlistCard key={item._id} item={item} showActions />
             ))}
           </div>
         )}
