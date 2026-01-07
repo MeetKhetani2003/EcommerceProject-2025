@@ -96,6 +96,17 @@ export default function ProductDetailsClient({ product }) {
     setAdded(true);
     toast.success(`Added to cart 🛍 (${selectedSize})`);
   };
+  const currentPrice = product?.price?.current;
+  const oldPrice = product?.price?.old;
+
+  const hasDiscount =
+    typeof oldPrice === "number" &&
+    typeof currentPrice === "number" &&
+    oldPrice > currentPrice;
+
+  const discountPercent = hasDiscount
+    ? Math.round(((oldPrice - currentPrice) / oldPrice) * 100)
+    : null;
 
   return (
     <div className={`max-w-[1400px] mx-auto px-4 py-10 ${PALETTE.BACKGROUND}`}>
@@ -159,6 +170,15 @@ export default function ProductDetailsClient({ product }) {
               </span>
             )}
           </div>
+          <div className="space-y-1">
+            <h1 className={`text-3xl font-semibold ${PALETTE.TEXT}`}>
+              {product.name}
+            </h1>
+
+            <p className="text-sm uppercase tracking-wide text-gray-500">
+              {product.brand} · {product.category}
+            </p>
+          </div>
 
           {/* Wishlist */}
           <button
@@ -171,13 +191,31 @@ export default function ProductDetailsClient({ product }) {
           </button>
 
           {/* Price */}
-          <div className={`border-y py-4 ${PALETTE.BORDER}`}>
-            <p className={`text-3xl font-bold ${PALETTE.TEXT}`}>
-              ₹{product.price.current}
-            </p>
+          <div className={`border-y py-4 ${PALETTE.BORDER} space-y-1`}>
+            <div className="flex items-center gap-3 flex-wrap">
+              {/* Current (Discounted) Price */}
+              <p className={`text-3xl font-bold ${PALETTE.TEXT}`}>
+                ₹{currentPrice}
+              </p>
+
+              {/* Old Price (MRP) */}
+              {hasDiscount && (
+                <p className="text-lg text-gray-400 line-through">
+                  ₹{oldPrice}
+                </p>
+              )}
+
+              {/* Discount % */}
+              {hasDiscount && (
+                <span className="text-sm font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded">
+                  {discountPercent}% OFF
+                </span>
+              )}
+            </div>
+
+            <p className="text-xs text-gray-500">Inclusive of all taxes</p>
           </div>
 
-          {/* ✅ SIZE (hidden for accessories) */}
           {!isAccessory && (
             <div>
               <p className="text-xs uppercase mb-2">Select Size</p>
