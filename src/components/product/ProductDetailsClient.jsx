@@ -171,10 +171,6 @@ export default function ProductDetailsClient({ product }) {
             )}
           </div>
           <div className="space-y-1">
-            <h1 className={`text-3xl font-semibold ${PALETTE.TEXT}`}>
-              {product.name}
-            </h1>
-
             <p className="text-sm uppercase tracking-wide text-gray-500">
               {product.brand} · {product.category}
             </p>
@@ -205,7 +201,6 @@ export default function ProductDetailsClient({ product }) {
                 </p>
               )}
 
-              {/* Discount % */}
               {hasDiscount && (
                 <span className="text-sm font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded">
                   {discountPercent}% OFF
