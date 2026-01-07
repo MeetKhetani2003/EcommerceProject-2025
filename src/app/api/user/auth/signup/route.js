@@ -1,6 +1,22 @@
 import { connectDb } from "@/lib/dbConnect";
 import User from "@/models/User";
 import { NextResponse } from "next/server";
+async function generateUsernameFromEmail(email) {
+  const base = email
+    .split("@")[0]
+    .toLowerCase()
+    .replace(/[^a-z0-9._]/g, ""); // safe chars
+
+  let username = base;
+  let counter = 1;
+
+  while (await User.exists({ username })) {
+    username = `${base}${counter}`;
+    counter++;
+  }
+
+  return username;
+}
 
 export async function POST(req) {
   try {
@@ -45,15 +61,22 @@ export async function POST(req) {
       delete data.password;
     }
 
+    const username =
+      data.username ||
+      (provider === "google"
+        ? await generateUsernameFromEmail(data.email)
+        : undefined);
+
     const newUser = await User.create({
       email: data.email,
       provider,
       googleId: provider === "google" ? data.googleId : undefined,
       password: provider === "local" ? data.password : undefined,
-      username: data.username,
+      username,
       firstName: data.firstName || "",
       lastName: data.lastName || "",
     });
+
     const userResponse = {
       _id: newUser._id,
       email: newUser.email,
