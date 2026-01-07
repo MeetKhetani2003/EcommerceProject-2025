@@ -22,7 +22,7 @@ export default function SizeSelectModalWhishlist({
           {product.availableSizes?.map((size) => (
             <button
               key={size}
-              onClick={() => onSelect(size)}
+              onClick={() => setSelected((prev) => (prev === s ? null : s))}
               className="px-4 py-2 border rounded-md text-sm hover:bg-[#654321] hover:text-white transition"
             >
               {size}

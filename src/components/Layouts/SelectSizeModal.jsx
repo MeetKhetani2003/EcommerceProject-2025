@@ -86,7 +86,7 @@ export default function SelectSizeModal({
           {finalSizes.map((s) => (
             <button
               key={s}
-              onClick={() => setSelected(s)}
+              onClick={() => setSelected((prev) => (prev === s ? null : s))}
               className={`px-4 py-2 rounded-lg border font-semibold transition-all duration-200 ${
                 selected === s
                   ? `${PALETTE.ACCENT} text-white shadow-md scale-[1.08]`
