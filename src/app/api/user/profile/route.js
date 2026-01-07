@@ -31,17 +31,7 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
-      user: {
-        _id: user._id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        addresses: user.addresses || [],
-        defaultAddress: user.defaultAddress ?? 0,
-        cart: user.cart || [],
-        wishlist: user.wishlist || [],
-        orderHistory: user.orderHistory || [],
-      },
+      user: user,
     });
   } catch (error) {
     return NextResponse.json({ success: false, error: error.message });
