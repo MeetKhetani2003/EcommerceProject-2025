@@ -13,6 +13,7 @@ import WishlistModal from "./WishlistModal";
 import CartModal from "./CartModal";
 import { useUserStore } from "@/store/useUserStore";
 import { useCartStore } from "@/store/useCartStore";
+import toast from "react-hot-toast";
 
 /* -------------------------
    COLOR PALETTE (DO NOT TOUCH UI)
@@ -115,6 +116,7 @@ const placeholderImage = "/assets/placeholder.jpg";
 const NavBar = () => {
   const pathname = usePathname();
   const isActive = (href) => pathname === href;
+  const hasShownLoginToast = useRef(false);
 
   const headerRef = useRef(null); // used to compute available space
   const [cartOpen, setCartOpen] = useState(false);
@@ -124,7 +126,8 @@ const NavBar = () => {
 
   const [megaMaxHeight, setMegaMaxHeight] = useState(0);
 
-  const { user, getUser } = useUserStore();
+  const { user, loading, initialized, getUser } = useUserStore();
+
   const fetchCart = useCartStore((s) => s.fetchCart);
   const wishlistCount = useAppStore((s) => s.wishlist.length);
   const cartCount = useCartStore((s) => s.cartCount());
@@ -133,11 +136,11 @@ const NavBar = () => {
     getUser();
     fetchCart();
   }, [getUser, fetchCart]);
-  console.log(user);
+  // console.log(user);
   function toSlug(label) {
     return label.toLowerCase().replace(/[^a-z0-9]+/g, "-");
   }
-  console.log(user);
+  // console.log(user);
 
   // compute available height for mega menu body
   const computeMegaMaxHeight = (menuOpenName) => {
@@ -159,6 +162,13 @@ const NavBar = () => {
     const available = Math.max(window.innerHeight - headerBottom - buffer, 160); // at least 160px
     setMegaMaxHeight(available);
   };
+
+  useEffect(() => {
+    if (initialized && user && !hasShownLoginToast.current) {
+      toast.success(`Welcome back, ${user.firstName}! 🎉`);
+      hasShownLoginToast.current = true;
+    }
+  }, [initialized, user]);
 
   // recompute when window resizes, orientation change, or openMegaMenu changes
   useEffect(() => {
@@ -451,18 +461,23 @@ const NavBar = () => {
             </div>
           </div>
 
-          {user ? (
+          {!initialized || loading ? (
+            // skeleton / placeholder
+            <div className="w-24 h-6 bg-gray-200 rounded animate-pulse" />
+          ) : user ? (
             <Link
               href="/profile"
               className="flex items-center text-[#654321] z-40 gap-2"
             >
-              <User className="w-6 h-6 " />
-              <span>{user.firstName + " " + user.lastName}</span>
+              <User className="w-6 h-6" />
+              <span>
+                {user.firstName} {user.lastName}
+              </span>
             </Link>
           ) : (
             <Link href="/auth" onClick={handleLinkClick}>
-              {/* <span>Log in/Register</span> */}
               <User className="w-6 h-6 text-[#654321]" />
+              <span>Signup /Login</span>
             </Link>
           )}
 

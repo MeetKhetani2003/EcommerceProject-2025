@@ -34,13 +34,12 @@ const LoginFormOrganism = () => {
       if (!res.ok) {
         toast.error(data.message || "Login failed.");
       } else {
-        toast.success("Logged in successfully 🎉");
+        // toast.success("Logged in successfully 🎉");
         router.push("/");
       }
     } catch (error) {
       toast.error("Something went wrong. Try again.");
     }
-
     setLoading(false);
   };
 
