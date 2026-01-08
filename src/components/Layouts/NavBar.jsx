@@ -165,7 +165,7 @@ const NavBar = () => {
 
   useEffect(() => {
     if (initialized && user && !hasShownLoginToast.current) {
-      toast.success(`Welcome back, ${user.firstName}! 🎉`);
+      toast.success(`Welcome back, ${user.username}! 🎉`);
       hasShownLoginToast.current = true;
     }
   }, [initialized, user]);
@@ -218,7 +218,7 @@ const NavBar = () => {
         <div key={link.name} className={`border-b ${PALETTE.BORDER_ACCENT}`}>
           <button
             onClick={() => toggleMegaMenu(link.name)}
-            className={`w-full text-left py-4 px-4 font-bold flex justify-between items-center text-lg ${PALETTE.TEXT_PRIMARY} ${PALETTE.HOVER_ACCENT}`}
+            className={`w-full text-left  px-4 font-bold flex justify-between pt-3 items-center text-lg ${PALETTE.TEXT_PRIMARY} ${PALETTE.HOVER_ACCENT}`}
           >
             {link.name}
             <span className="text-xl text-gray-700">
@@ -235,7 +235,7 @@ const NavBar = () => {
           >
             {/* inner wrapper that becomes scrollable with a computed maxHeight */}
             <div
-              className="p-4 space-y-4"
+              className="p-2 "
               style={{
                 maxHeight: isOpen ? `${megaMaxHeight}px` : 0,
                 overflowY: isOpen ? "auto" : "hidden",
@@ -320,7 +320,7 @@ const NavBar = () => {
               </div>
 
               {/* DETAILED CATEGORY LIST */}
-              {data?.map((cat, i) => (
+              {/* data?.map((cat, i) => (
                 <div key={i} className="pt-2">
                   <h4
                     className={`text-sm font-bold ${PALETTE.TEXT_PRIMARY} mb-2`}
@@ -343,7 +343,7 @@ const NavBar = () => {
                     })}
                   </ul>
                 </div>
-              ))}
+              ))} */}
             </div>
           </div>
         </div>
@@ -475,7 +475,11 @@ const NavBar = () => {
               </span>
             </Link>
           ) : (
-            <Link href="/auth" onClick={handleLinkClick}>
+            <Link
+              href="/auth"
+              onClick={handleLinkClick}
+              className="flex flex-col items-center"
+            >
               <User className="w-6 h-6 text-[#654321]" />
               <span>Signup /Login</span>
             </Link>
@@ -525,27 +529,33 @@ const NavBar = () => {
         }`}
       >
         <div className={`${PALETTE.ACCENT_BG} text-white p-4`}>
-          {user?.firstName ? (
-            <Link href="/profile" className="flex items-center z-40 gap-2">
-              <User className="w-5 h-5" />
-
-              <span>{user.firstName + " " + user.lastName}</span>
+          {!initialized || loading ? (
+            <div className="w-24 h-6 bg-gray-200 rounded animate-pulse" />
+          ) : user ? (
+            <Link
+              href="/profile"
+              className="hidden md:flex items-center gap-2 text-[#654321] max-w-[180px]"
+            >
+              <User className="w-6 h-6 shrink-0" />
+              <span className="truncate font-medium">
+                {user.userName} {user.lastName}
+              </span>
             </Link>
           ) : (
             <Link
               href="/auth"
-              className={`flex items-center justify-between bg-white ${PALETTE.TEXT_PRIMARY} py-2 px-3 rounded-md mb-2 font-bold hover:bg-gray-100 transition`}
               onClick={handleLinkClick}
+              className="flex flex-col items-center text-[#654321]"
             >
-              <span>Log in/Register</span>
-              <FiLogIn className="w-5 h-5" />
+              <User className="w-6 h-6" />
+              <span className="text-xs">Signup / Login</span>
             </Link>
           )}
 
-          <p className="text-sm font-medium text-center">
+          {/* <p className="text-sm font-medium text-center">
             Shop the exclusive Men's Collection
             <span className="ml-1 text-yellow-300">🔥</span>
-          </p>
+          </p> */}
         </div>
 
         <div className="py-2">
